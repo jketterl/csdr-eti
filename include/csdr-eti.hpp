@@ -13,7 +13,6 @@ namespace Csdr::Eti {
     class EtiDecoder: public Csdr::Module<Csdr::complex<float>, unsigned char> {
         public:
             EtiDecoder();
-            ~EtiDecoder() override;
             bool canProcess() override;
             void process() override;
         private:
@@ -27,10 +26,6 @@ namespace Csdr::Eti {
             int32_t get_fine_time_sync(Csdr::complex<float>* input);
             int32_t get_coarse_freq_shift(Csdr::complex<float>* input);
             double get_fine_freq_corr(Csdr::complex<float>* input);
-            /* raw symbols */
-            fftwf_complex symbols[76][2048] = {0, 0};
-            /* symbols d-qpsk-ed */
-            fftwf_complex * symbols_d;
             struct dab_state_t* dab = nullptr;
     };
 

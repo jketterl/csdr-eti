@@ -26,11 +26,6 @@ EtiDecoder::EtiDecoder() {
         std::memcpy(me->writer->getWritePointer(), eti, 6144);
         me->writer->advance(6144);
     }, this);
-    symbols_d = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * 2048 * 76);
-}
-
-EtiDecoder::~EtiDecoder() {
-    fftwf_free(symbols_d);
 }
 
 bool EtiDecoder::canProcess() {
@@ -63,11 +58,20 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
 
     coarse_freq_shift = get_coarse_freq_shift(input);
     if (abs(coarse_freq_shift) > 1) {
+        std::cerr << "coarse frequency shift: " << coarse_freq_shift << std::endl;
         // force_timesync = true;
         //return false;
     }
 
     fine_freq_shift = get_fine_freq_corr(input);
+    if (fine_freq_shift != 0) {
+        std::cerr << "fine frequency shift: " << fine_freq_shift << std::endl;
+    }
+
+
+    /* raw symbols */
+    fftwf_complex symbols[76][2048] = {0, 0};
+
     /* d-qpsk */
     for (int i=0;i<76;i++) {
         fftwf_plan p = fftwf_plan_dft_1d(2048, (fftwf_complex*) &input[2656+(2552*i)+504], symbols[i], FFTW_FORWARD, FFTW_ESTIMATE);
@@ -86,7 +90,9 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
 
     }
 
-    //
+    /* symbols d-qpsk-ed */
+    fftwf_complex* symbols_d = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * 2048 * 76);
+
     for (int j=1;j<76;j++) {
         for (int i=0;i<2048;i++)
         {
@@ -117,6 +123,8 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
         }
         dst += 3072;
     }
+
+    fftwf_free(symbols_d);
 
     return true;
 }
@@ -234,20 +242,21 @@ int32_t EtiDecoder::get_fine_time_sync(Csdr::complex<float> *input) {
 }
 
 int32_t EtiDecoder::get_coarse_freq_shift(Csdr::complex<float> *input) {
+    fftwf_complex symbols[2048] = {0, 0};
     fftwf_plan p;
-    p = fftwf_plan_dft_1d(2048, (fftwf_complex*) &input[2656+505+fine_timeshift], symbols[0], FFTW_FORWARD, FFTW_ESTIMATE);
+    p = fftwf_plan_dft_1d(2048, (fftwf_complex*) &input[2656+505+fine_timeshift], symbols, FFTW_FORWARD, FFTW_ESTIMATE);
     fftwf_execute(p);
     fftwf_destroy_plan(p);
 
     fftwf_complex tmp;
     for (int i = 0; i < 2048/2; i++)
     {
-        tmp[0]     = symbols[0][i][0];
-        tmp[1]     = symbols[0][i][1];
-        symbols[0][i][0]    = symbols[0][i+2048/2][0];
-        symbols[0][i][1]    = symbols[0][i+2048/2][1];
-        symbols[0][i+2048/2][0] = tmp[0];
-        symbols[0][i+2048/2][1] = tmp[1];
+        tmp[0]     = symbols[i][0];
+        tmp[1]     = symbols[i][1];
+        symbols[i][0]    = symbols[i+2048/2][0];
+        symbols[i][1]    = symbols[i+2048/2][1];
+        symbols[i+2048/2][0] = tmp[0];
+        symbols[i+2048/2][1] = tmp[1];
     }
 
     int len = 128;
@@ -260,10 +269,10 @@ int32_t EtiDecoder::get_coarse_freq_shift(Csdr::complex<float> *input) {
     for (k=-freq_hub;k<=freq_hub;k++) {
 
         for (s=0;s<len;s++) {
-            convoluted_prs[s][0] = prs_static[freq_hub+s][0] * symbols[0][freq_hub+k+256+s][0]-
-                    (-1)*prs_static[freq_hub+s][1] * symbols[0][freq_hub+k+256+s][1];
-            convoluted_prs[s][1] = prs_static[freq_hub+s][0] * symbols[0][freq_hub+k+256+s][1]+
-                    (-1)*prs_static[freq_hub+s][1] * symbols[0][freq_hub+k+256+s][0];
+            convoluted_prs[s][0] = prs_static[freq_hub+s][0] * symbols[freq_hub+k+256+s][0]-
+                    (-1)*prs_static[freq_hub+s][1] * symbols[freq_hub+k+256+s][1];
+            convoluted_prs[s][1] = prs_static[freq_hub+s][0] * symbols[freq_hub+k+256+s][1]+
+                    (-1)*prs_static[freq_hub+s][1] * symbols[freq_hub+k+256+s][0];
         }
         fftwf_complex convoluted_prs_time[len];
         fftwf_plan px;
