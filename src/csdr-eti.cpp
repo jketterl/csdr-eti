@@ -113,8 +113,8 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
     for (int j=1;j<76;j++) {
         if (j == 4) { dst = tf->msc_symbols_demapped[0]; }
         k = 0;
-        for (int i=0;i<2048;i++){
-            if ((i>255) && i!=1024 && i < 1793) {
+        for (int i=256;i<1793;i++){
+            if (i!=1024) {
                 /* Frequency deinterleaving and QPSK demapping combined */
                 kk = rev_freq_deint_tab[k++];
                 dst[kk] = (symbols_d[j*2048+i][0]>0)?0:1;
