@@ -16,10 +16,6 @@ extern "C" {
 
 using namespace Csdr::Eti;
 
-extern "C" void invoke_function(void* ptr) {
-    (*static_cast<std::function<void()>*>(ptr))();
-}
-
 EtiDecoder::EtiDecoder() {
     init_dab_state(&dab, [](uint8_t* eti, void* ctx) {
         EtiDecoder* me = (EtiDecoder*) ctx;
