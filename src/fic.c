@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "dab.h"
 #include "fic.h"
@@ -120,6 +121,22 @@ void fib_parse(struct tf_info_t* info, uint8_t* fib)
           }
         }
       }
+    } else if (type == 1) {
+        uint8_t charset = (fib[i] & 0xF0) >> 4;
+        bool Rfu = (fib[i] & 0x08) >> 3;
+        uint8_t extension = fib[i] & 0x07;
+        if (extension == 1) {
+            uint16_t service_id = (fib[i + 1] << 8) | fib[i + 2];
+            // we get 16 characters but may need our own null terminator
+            char* label = (char*) malloc(17);
+            memcpy(label, &fib[i + 3], 16);
+            // make sure it's terminated
+            label[16] = 0x0;
+
+            //fprintf(stderr, "FIB 1/1: service id %x, label %s\n", service_id, label);
+
+            free(label);
+        }
     }
     i += len;
   }
