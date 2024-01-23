@@ -2,6 +2,7 @@
 
 #include <csdr/module.hpp>
 #include <csdr/complex.hpp>
+#include "meta.hpp"
 
 extern "C" {
 #include "dab.h"
@@ -13,8 +14,10 @@ namespace Csdr::Eti {
     class EtiDecoder: public Csdr::Module<Csdr::complex<float>, unsigned char> {
         public:
             EtiDecoder();
+            ~EtiDecoder() override;
             bool canProcess() override;
             void process() override;
+            void setMetaWriter(MetaWriter* writer);
         private:
             uint32_t coarse_timeshift = 0;
             int32_t fine_timeshift = 0;
@@ -27,6 +30,9 @@ namespace Csdr::Eti {
             int32_t get_coarse_freq_shift(Csdr::complex<float>* input);
             double get_fine_freq_corr(Csdr::complex<float>* input);
             struct dab_state_t* dab = nullptr;
+            MetaWriter* metawriter = nullptr;
+
+            void sendMetaData(std::map<std::string, std::string> data);
     };
 
 }

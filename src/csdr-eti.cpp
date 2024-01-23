@@ -28,6 +28,21 @@ EtiDecoder::EtiDecoder() {
     }, this);
 }
 
+EtiDecoder::~EtiDecoder() {
+    delete metawriter;
+}
+
+void EtiDecoder::setMetaWriter(MetaWriter *writer) {
+    auto old = metawriter;
+    metawriter = writer;
+    delete old;
+}
+
+void EtiDecoder::sendMetaData(std::map<std::string, std::string> data) {
+    if (metawriter == nullptr) return;
+    metawriter->sendMetaData(data);
+}
+
 bool EtiDecoder::canProcess() {
     return this->reader->available() >= 196608 * 2;
 }
@@ -58,14 +73,16 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
 
     coarse_freq_shift = get_coarse_freq_shift(input);
     if (abs(coarse_freq_shift) > 1) {
-        std::cerr << "coarse frequency shift: " << coarse_freq_shift << std::endl;
-        // force_timesync = true;
-        //return false;
+        sendMetaData(std::map<std::string, std::string>{ {"coarse_frequency_shift", std::to_string(coarse_freq_shift)} });
+        //std::cerr << "coarse frequency shift: " << coarse_freq_shift << std::endl;
+        force_timesync = true;
+        return false;
     }
 
     fine_freq_shift = get_fine_freq_corr(input);
     if (fine_freq_shift != 0) {
-        std::cerr << "fine frequency shift: " << fine_freq_shift << std::endl;
+        sendMetaData(std::map<std::string, std::string>{ {"fine_frequency_shift", std::to_string(fine_freq_shift)} });
+        //std::cerr << "fine frequency shift: " << fine_freq_shift << std::endl;
     }
 
 
