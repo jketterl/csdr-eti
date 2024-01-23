@@ -326,13 +326,11 @@ double EtiDecoder::get_fine_freq_corr(Csdr::complex<float> *input) {
     right = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * 504);
     lr = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * 504);
     uint32_t i;
-    // remove this? it's not really doing anything
-    int32_t fine_timeshift = 0;
     for (i=0;i<504;i++) {
-        left[i][0] = input[2656+2048+i+fine_timeshift].i();
-        left[i][1] = input[2656+2048+i+fine_timeshift].q();
-        right[i][0] = input[2656+i+fine_timeshift].i();
-        right[i][1] = input[2656+i+fine_timeshift].q();
+        left[i][0] = input[2656+2048+i].i();
+        left[i][1] = input[2656+2048+i].q();
+        right[i][0] = input[2656+i].i();
+        right[i][1] = input[2656+i].q();
     }
     for (i=0;i<504;i++){
         lr[i][0] = (left[i][0]*right[i][0]-left[i][1]*(-1)*right[i][1]);
