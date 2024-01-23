@@ -22,10 +22,16 @@ EtiDecoder::EtiDecoder() {
         std::memcpy(me->writer->getWritePointer(), eti, 6144);
         me->writer->advance(6144);
     }, this);
+    forward_plan = fftwf_plan_dft_1d(2048, nullptr, nullptr, FFTW_FORWARD, FFTW_ESTIMATE);
+    backward_plan = fftwf_plan_dft_1d(1536, nullptr, nullptr, FFTW_BACKWARD, FFTW_ESTIMATE);
+    coarse_plan = fftwf_plan_dft_1d(128, nullptr, nullptr, FFTW_BACKWARD, FFTW_ESTIMATE);
 }
 
 EtiDecoder::~EtiDecoder() {
     delete metawriter;
+    fftwf_destroy_plan(forward_plan);
+    fftwf_destroy_plan(backward_plan);
+    fftwf_destroy_plan(coarse_plan);
 }
 
 void EtiDecoder::setMetaWriter(MetaWriter *writer) {
@@ -87,9 +93,7 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
 
     /* d-qpsk */
     for (int i=0;i<76;i++) {
-        fftwf_plan p = fftwf_plan_dft_1d(2048, (fftwf_complex*) &input[2656+(2552*i)+504], symbols[i], FFTW_FORWARD, FFTW_ESTIMATE);
-        fftwf_execute(p);
-        fftwf_destroy_plan(p);
+        fftwf_execute_dft(forward_plan, (fftwf_complex*) &input[2656 + (2552 * i) + 504], symbols[i]);
         fftwf_complex tmp;
         for (int j = 0; j < 2048/2; j++)
         {
@@ -186,10 +190,7 @@ int32_t EtiDecoder::get_fine_time_sync(Csdr::complex<float> *input) {
 
     /* first we have to transfer the receive prs symbol in frequency domain */
     fftwf_complex prs_received_fft[2048];
-    fftwf_plan p;
-    p = fftwf_plan_dft_1d(2048, (fftwf_complex*) &input[2656+504], &prs_received_fft[0], FFTW_FORWARD, FFTW_ESTIMATE);
-    fftwf_execute(p);
-    fftwf_destroy_plan(p);
+    fftwf_execute_dft(forward_plan, (fftwf_complex*) &input[2656 + 504], &prs_received_fft[0]);
 
     /* now we build the complex conjugate of the known prs */
     // 1536 as only the carries are used
@@ -230,10 +231,7 @@ int32_t EtiDecoder::get_fine_time_sync(Csdr::complex<float> *input) {
 
     /* and finally we transfer the convolution back into time domain */
     fftwf_complex convoluted_prs_time[1536];
-    fftwf_plan px;
-    px = fftwf_plan_dft_1d(1536, &convoluted_prs[0], &convoluted_prs_time[0], FFTW_BACKWARD, FFTW_ESTIMATE);
-    fftwf_execute(px);
-    fftwf_destroy_plan(px);
+    fftwf_execute_dft(backward_plan, &convoluted_prs[0], &convoluted_prs_time[0]);
 
     uint32_t maxPos=0;
     float tempVal = 0;
@@ -256,10 +254,7 @@ int32_t EtiDecoder::get_fine_time_sync(Csdr::complex<float> *input) {
 
 int32_t EtiDecoder::get_coarse_freq_shift(Csdr::complex<float> *input) {
     fftwf_complex symbols[2048] = {0, 0};
-    fftwf_plan p;
-    p = fftwf_plan_dft_1d(2048, (fftwf_complex*) &input[2656+505+fine_timeshift], symbols, FFTW_FORWARD, FFTW_ESTIMATE);
-    fftwf_execute(p);
-    fftwf_destroy_plan(p);
+    fftwf_execute_dft(forward_plan, (fftwf_complex*) &input[2656 + 505 + fine_timeshift], symbols);
 
     fftwf_complex tmp;
     for (int i = 0; i < 2048/2; i++)
@@ -288,10 +283,7 @@ int32_t EtiDecoder::get_coarse_freq_shift(Csdr::complex<float> *input) {
                     (-1)*prs_static[freq_hub+s][1] * symbols[freq_hub+k+256+s][0];
         }
         fftwf_complex convoluted_prs_time[len];
-        fftwf_plan px;
-        px = fftwf_plan_dft_1d(len, &convoluted_prs[0], &convoluted_prs_time[0], FFTW_BACKWARD, FFTW_ESTIMATE);
-        fftwf_execute(px);
-        fftwf_destroy_plan(px);
+        fftwf_execute_dft(coarse_plan, &convoluted_prs[0], &convoluted_prs_time[0]);
 
         uint32_t maxPos=0;
         float tempVal = 0;

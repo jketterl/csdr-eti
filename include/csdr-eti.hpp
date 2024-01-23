@@ -32,6 +32,10 @@ namespace Csdr::Eti {
             struct dab_state_t* dab = nullptr;
             MetaWriter* metawriter = nullptr;
 
+            fftwf_plan forward_plan;
+            fftwf_plan backward_plan;
+            fftwf_plan coarse_plan;
+
             void sendMetaData(std::map<std::string, std::string> data);
     };
 
