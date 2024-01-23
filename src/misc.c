@@ -4,11 +4,7 @@
 
 #include "dab.h"
 #include "depuncture.h"
-#ifdef ENABLE_SPIRAL_VITERBI
-#include "viterbi_spiral.h"
-#else
 #include "viterbi.h"
-#endif
 #include "misc.h"
 
 void merge_info(struct ens_info_t* ei, struct tf_info_t *info)
