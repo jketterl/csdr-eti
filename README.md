@@ -42,6 +42,7 @@ Please report any errors or shortcomings in these acknowledgements. I do not wis
 - IQ data as `Csdr::complex<float>`. This is binary compatible with the C++ native `std::complex<float>`, FFTW3's `fftwf_complex` or a basic `float[2]` containing the respective value for I and Q.
 - sample rate: fixed at 2048000 S/s.
 - Use an adequately sized buffer to feed the data. Recommended minimum: 524288 samples.
+- This demodulator requires very accurate tuning of the desired signal, more accurate than the calibration of most SDRs can be (<1 ppm). For this purpose, the module will write according information to the metadata writer, if provided. This can be used to control a `Csdr::Shift()` on the input to achieve the necessary precision.
 
 ### Output
 - ETI binary stream represented as `uint8_t`. Can be converted to other 8-bit data types as required.
