@@ -3,9 +3,9 @@
 #include <csdr/module.hpp>
 #include <csdr/complex.hpp>
 #include "meta.hpp"
+#include "dab.h"
 
 extern "C" {
-#include "dab.h"
 #include <fftw3.h>
 }
 

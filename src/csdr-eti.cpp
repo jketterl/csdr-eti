@@ -92,7 +92,7 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
     fftwf_complex symbols[76][2048] = {0, 0};
 
     /* d-qpsk */
-    for (int i=0;i<76;i++) {
+    for (int i = 0; i < 76; i++) {
         fftwf_execute_dft(forward_plan, (fftwf_complex*) &input[2656 + (2552 * i) + 504], symbols[i]);
         fftwf_complex tmp;
         for (int j = 0; j < 2048/2; j++)
@@ -110,32 +110,31 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
     /* symbols d-qpsk-ed */
     fftwf_complex* symbols_d = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * 2048 * 76);
 
-    for (int j=1;j<76;j++) {
-        for (int i=0;i<2048;i++)
-        {
-            symbols_d[j*2048+i][0] =
-                    ((symbols[j][i][0]*symbols[j-1][i][0])
-                    +(symbols[j][i][1]*symbols[j-1][i][1]))
-                    /(symbols[j-1][i][0]*symbols[j-1][i][0]+symbols[j-1][i][1]*symbols[j-1][i][1]);
-            symbols_d[j*2048+i][1] =
-                    ((symbols[j][i][0]*symbols[j-1][i][1])
-                    -(symbols[j][i][1]*symbols[j-1][i][0]))
-                    /(symbols[j-1][i][0]*symbols[j-1][i][0]+symbols[j-1][i][1]*symbols[j-1][i][1]);
+    for (int j = 1; j < 76; j++) {
+        for (int i = 0; i < 2048; i++) {
+            symbols_d[j * 2048 + i][0] =
+                    ((symbols[j][i][0] * symbols[j-1][i][0])
+                    +(symbols[j][i][1] * symbols[j-1][i][1]))
+                    /(symbols[j - 1][i][0] * symbols[j - 1][i][0] + symbols[j - 1][i][1] * symbols[j - 1][i][1]);
+            symbols_d[j * 2048 + i][1] =
+                    ((symbols[j][i][0] * symbols[j-1][i][1])
+                    -(symbols[j][i][1] * symbols[j-1][i][0]))
+                    /(symbols[j - 1][i][0] * symbols[j - 1][i][0] + symbols[j - 1][i][1] * symbols[j-1][i][1]);
         }
     }
 
     uint8_t* dst = tf->fic_symbols_demapped[0];
 
-    int k,kk;
-    for (int j=1;j<76;j++) {
+    int k, kk;
+    for (int j=1; j<76; j++) {
         if (j == 4) { dst = tf->msc_symbols_demapped[0]; }
         k = 0;
-        for (int i=256;i<1793;i++){
-            if (i!=1024) {
+        for (int i = 256; i < 1793; i++){
+            if (i != 1024) {
                 /* Frequency deinterleaving and QPSK demapping combined */
                 kk = rev_freq_deint_tab[k++];
-                dst[kk] = (symbols_d[j*2048+i][0]>0)?0:1;
-                dst[1536+kk] = (symbols_d[j*2048+i][1]>0)?1:0;
+                dst[kk] = (symbols_d[j * 2048 + i][0] > 0) ? 0 : 1;
+                dst[1536 + kk] = (symbols_d[j * 2048 + i][1] > 0) ? 1 : 0;
             }
         }
         dst += 3072;
@@ -148,7 +147,7 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
 
 uint32_t EtiDecoder::get_coarse_time_sync(Csdr::complex<float>* input) {
     int32_t tnull = 2656; // was 2662? why?
-    int32_t j,k;
+    int32_t j, k;
     float filt[196608 - tnull];
 
     // check for energy in fist tnull samples
@@ -163,19 +162,19 @@ uint32_t EtiDecoder::get_coarse_time_sync(Csdr::complex<float>* input) {
     //fprintf(stderr,"Resync\n");
     // energy was to high so we assume we are not in sync
     // subsampled filter to detect where the null symbol is
-    for (j=0;j<(196608-tnull)/10;j++)
+    for (j = 0; j < (196608 - tnull) / 10; j++)
         filt[j] = 0;
-    for (j=0;j<196608-tnull;j+=10)
-        for (k=0;k<tnull;k+=10)
-            filt[j/10] = filt[j/10] + fabs(input[j + k].i());
+    for (j = 0; j < 196608 - tnull; j+=10)
+        for (k = 0; k < tnull; k += 10)
+            filt[j / 10] = filt[j / 10] + fabs(input[j + k].i());
 
     // finding the minimum in filtered data gives position of null symbol
-    float minVal=9999999;
-    uint32_t minPos=0;
-    for (j=0;j<(196608-tnull)/10;j++){
-        if (filt[j]<minVal) {
+    float minVal = 9999999;
+    uint32_t minPos = 0;
+    for (j = 0; j < (196608 - tnull) / 10;j++){
+        if (filt[j] < minVal) {
             minVal = filt[j];
-            minPos = j*10;
+            minPos = j * 10;
         }
     }
     //fprintf(stderr,"calculated position of nullsymbol: %f",minPos*2);
@@ -196,7 +195,7 @@ int32_t EtiDecoder::get_fine_time_sync(Csdr::complex<float> *input) {
     // 1536 as only the carries are used
     fftwf_complex prs_star[1536];
     int i;
-    for (i=0;i<1536;i++) {
+    for (i = 0; i < 1536; i++) {
         prs_star[i][0] = prs_static[i][0];
         prs_star[i][1] = -1 * prs_static[i][1];
     }
@@ -210,14 +209,14 @@ int32_t EtiDecoder::get_fine_time_sync(Csdr::complex<float> *input) {
     // matlab notation (!!!-1)
     // 769:1536+s
     //  2:769+s why 2? I dont remember, but peak is very strong
-    for (i=0;i<1536;i++) {
-        if (i<768) {
-            prs_rec_shift[i][0] = prs_received_fft[i+1280][0];
-            prs_rec_shift[i][1] = prs_received_fft[i+1280][1];
+    for (i = 0; i < 1536; i++) {
+        if (i < 768) {
+            prs_rec_shift[i][0] = prs_received_fft[i + 1280][0];
+            prs_rec_shift[i][1] = prs_received_fft[i + 1280][1];
         }
-        if (i>=768) {
-            prs_rec_shift[i][0] = prs_received_fft[i-765][0];
-            prs_rec_shift[i][1] = prs_received_fft[i-765][1];
+        if (i >= 768) {
+            prs_rec_shift[i][0] = prs_received_fft[i - 765][0];
+            prs_rec_shift[i][1] = prs_received_fft[i - 765][1];
         }
     }
 
@@ -225,8 +224,8 @@ int32_t EtiDecoder::get_fine_time_sync(Csdr::complex<float> *input) {
     fftwf_complex convoluted_prs[1536];
     int s;
     for (s=0;s<1536;s++) {
-        convoluted_prs[s][0] = prs_rec_shift[s][0]*prs_star[s][0]-prs_rec_shift[s][1]*prs_star[s][1];
-        convoluted_prs[s][1] = prs_rec_shift[s][0]*prs_star[s][1]+prs_rec_shift[s][1]*prs_star[s][0];
+        convoluted_prs[s][0] = prs_rec_shift[s][0] * prs_star[s][0] - prs_rec_shift[s][1] * prs_star[s][1];
+        convoluted_prs[s][1] = prs_rec_shift[s][0] * prs_star[s][1] + prs_rec_shift[s][1] * prs_star[s][0];
     }
 
     /* and finally we transfer the convolution back into time domain */
@@ -235,21 +234,20 @@ int32_t EtiDecoder::get_fine_time_sync(Csdr::complex<float> *input) {
 
     uint32_t maxPos=0;
     float tempVal = 0;
-    float maxVal=-99999;
+    float maxVal =- 99999;
     for (i=0;i<1536;i++) {
-        tempVal = sqrt((convoluted_prs_time[i][0]*convoluted_prs_time[i][0])+(convoluted_prs_time[i][1]*convoluted_prs_time[i][1]));
-        if (tempVal>maxVal) {
+        tempVal = sqrt((convoluted_prs_time[i][0] * convoluted_prs_time[i][0]) + (convoluted_prs_time[i][1] * convoluted_prs_time[i][1]));
+        if (tempVal > maxVal) {
             maxPos = i;
             maxVal = tempVal;
         }
     }
 
-    if (maxPos<1536/2) {
-        return maxPos+8;
+    if (maxPos < 1536 / 2) {
+        return maxPos + 8;
     } else {
-        return (maxPos-(1536));
+        return maxPos - 1536;
     }
-    //return 0;
 }
 
 int32_t EtiDecoder::get_coarse_freq_shift(Csdr::complex<float> *input) {
@@ -261,10 +259,10 @@ int32_t EtiDecoder::get_coarse_freq_shift(Csdr::complex<float> *input) {
     {
         tmp[0]     = symbols[i][0];
         tmp[1]     = symbols[i][1];
-        symbols[i][0]    = symbols[i+2048/2][0];
-        symbols[i][1]    = symbols[i+2048/2][1];
-        symbols[i+2048/2][0] = tmp[0];
-        symbols[i+2048/2][1] = tmp[1];
+        symbols[i][0]    = symbols[i + 2048 / 2][0];
+        symbols[i][1]    = symbols[i + 2048 / 2][1];
+        symbols[i + 2048 / 2][0] = tmp[0];
+        symbols[i + 2048 / 2][1] = tmp[1];
     }
 
     int len = 128;
@@ -273,10 +271,10 @@ int32_t EtiDecoder::get_coarse_freq_shift(Csdr::complex<float> *input) {
     int freq_hub = 14; // + and - center freq
     int k;
     float global_max = -99999;
-    int global_max_pos=0;
-    for (k=-freq_hub;k<=freq_hub;k++) {
+    int global_max_pos = 0;
+    for (k =- freq_hub; k <= freq_hub; k++) {
 
-        for (s=0;s<len;s++) {
+        for (s = 0; s < len; s++) {
             convoluted_prs[s][0] = prs_static[freq_hub+s][0] * symbols[freq_hub+k+256+s][0]-
                     (-1)*prs_static[freq_hub+s][1] * symbols[freq_hub+k+256+s][1];
             convoluted_prs[s][1] = prs_static[freq_hub+s][0] * symbols[freq_hub+k+256+s][1]+
@@ -285,11 +283,11 @@ int32_t EtiDecoder::get_coarse_freq_shift(Csdr::complex<float> *input) {
         fftwf_complex convoluted_prs_time[len];
         fftwf_execute_dft(coarse_plan, &convoluted_prs[0], &convoluted_prs_time[0]);
 
-        uint32_t maxPos=0;
+        uint32_t maxPos = 0;
         float tempVal = 0;
         float maxVal=-99999;
         for (s=0;s<len;s++) {
-            tempVal = sqrt((convoluted_prs_time[s][0]*convoluted_prs_time[s][0])+(convoluted_prs_time[s][1]*convoluted_prs_time[s][1]));
+            tempVal = sqrt((convoluted_prs_time[s][0] * convoluted_prs_time[s][0]) + (convoluted_prs_time[s][1] * convoluted_prs_time[s][1]));
             if (tempVal>maxVal) {
                 maxPos = s;
                 maxVal = tempVal;
@@ -318,24 +316,24 @@ double EtiDecoder::get_fine_freq_corr(Csdr::complex<float> *input) {
     right = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * 504);
     lr = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * 504);
     uint32_t i;
-    for (i=0;i<504;i++) {
-        left[i][0] = input[2656+2048+i].i();
-        left[i][1] = input[2656+2048+i].q();
-        right[i][0] = input[2656+i].i();
-        right[i][1] = input[2656+i].q();
+    for (i = 0; i < 504; i++) {
+        left[i][0] = input[2656 + 2048 + i].i();
+        left[i][1] = input[2656 + 2048 + i].q();
+        right[i][0] = input[2656 + i].i();
+        right[i][1] = input[2656 + i].q();
     }
-    for (i=0;i<504;i++){
-        lr[i][0] = (left[i][0]*right[i][0]-left[i][1]*(-1)*right[i][1]);
-        lr[i][1] = (left[i][0]*(-1)*right[i][1]+left[i][1]*right[i][0]);
+    for (i = 0; i < 504; i++){
+        lr[i][0] = (left[i][0] * right[i][0] - left[i][1] * (-1)*right[i][1]);
+        lr[i][1] = (left[i][0] * (-1)*right[i][1] + left[i][1] * right[i][0]);
     }
 
-    for (i=0;i<504;i++){
+    for (i = 0; i < 504; i++){
         angle[i] = atan2(lr[i][1],lr[i][0]);
     }
-    for (i=0;i<504;i++){
+    for (i = 0; i < 504; i++){
         mean = mean + angle[i];
     }
-    mean = (mean/504);
+    mean = (mean / 504);
     //printf("\n%f %f\n",left[0][0],left[0][1]);
     //printf("\n%f %f\n",right[0][0],right[0][1]);
     //printf("\n%f %f\n",lr[0][0],lr[0][1]);
