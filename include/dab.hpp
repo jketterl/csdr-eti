@@ -80,5 +80,5 @@ struct dab_state_t
   std::function<void(uint8_t* eti)> eti_callback;
 };
 
-void init_dab_state(struct dab_state_t **dab, std::function<void(uint8_t* eti)> eti_callback);
+struct dab_state_t* init_dab_state(std::function<void(uint8_t* eti)> eti_callback);
 void dab_process_frame(struct dab_state_t *dab);

@@ -12,19 +12,23 @@ extern "C" {
 #include "viterbi.h"
 };
 
-void init_dab_state(struct dab_state_t **dab, std::function<void(uint8_t* eti)> eti_callback)
-{
-  int i;
+struct dab_state_t* init_dab_state(std::function<void(uint8_t* eti)> eti_callback) {
+    int i;
 
-  *dab = (struct dab_state_t*) calloc(sizeof(struct dab_state_t),1);
+    struct dab_state_t* dab = (struct dab_state_t*) calloc(sizeof(struct dab_state_t),1);
 
-  (*dab)->eti_callback = std::move(eti_callback);
+    dab->eti_callback = std::move(eti_callback);
 
-  for (i=0;i<64;i++) { (*dab)->ens_info.subchans[i].id = -1; (*dab)->ens_info.subchans[i].ASCTy = -1; }
-  (*dab)->ens_info.CIFCount_hi = 0xff;
-  (*dab)->ens_info.CIFCount_lo = 0xff;
+    for (i = 0; i < 64; i++) {
+        dab->ens_info.subchans[i].id = -1;
+        dab->ens_info.subchans[i].ASCTy = -1;
+    }
+    dab->ens_info.CIFCount_hi = 0xff;
+    dab->ens_info.CIFCount_lo = 0xff;
 
-  init_viterbi();
+    init_viterbi();
+
+    return dab;
 }
 
 void dab_process_frame(struct dab_state_t *dab)
