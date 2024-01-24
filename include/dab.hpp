@@ -1,7 +1,7 @@
-#ifndef _DAB_H
-#define _DAB_H
+#pragma once
 
-#include <stdint.h>
+#include <cstdint>
+#include <functional>
 
 /* A demapped transmission frame represents a transmission frame in
    the final state before the FIC-specific and MSC-specific decoding
@@ -77,11 +77,8 @@ struct dab_state_t
   int okcount;
 
   /* Callback function to process a decoded ETI frame */
-  void (* eti_callback)(uint8_t *eti, void* ctx);
-  void* callback_ctx;
+  std::function<void(uint8_t* eti)> eti_callback;
 };
 
-void init_dab_state(struct dab_state_t **dab, void (* eti_callback)(uint8_t *eti, void* ctx), void* ctx);
+void init_dab_state(struct dab_state_t **dab, std::function<void(uint8_t* eti)> eti_callback);
 void dab_process_frame(struct dab_state_t *dab);
-
-#endif

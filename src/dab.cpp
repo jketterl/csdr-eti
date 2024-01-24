@@ -2,22 +2,23 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <utility>
+
 #include "dab.hpp"
+#include "fic.hpp"
+#include "misc.hpp"
 
 extern "C" {
 #include "viterbi.h"
-#include "fic.h"
-#include "misc.h"
 };
 
-void init_dab_state(struct dab_state_t **dab, void (* eti_callback)(uint8_t *eti, void* ctx), void* ctx)
+void init_dab_state(struct dab_state_t **dab, std::function<void(uint8_t* eti)> eti_callback)
 {
   int i;
 
   *dab = (struct dab_state_t*) calloc(sizeof(struct dab_state_t),1);
 
-  (*dab)->eti_callback = eti_callback;
-  (*dab)->callback_ctx = ctx;
+  (*dab)->eti_callback = std::move(eti_callback);
 
   for (i=0;i<64;i++) { (*dab)->ens_info.subchans[i].id = -1; (*dab)->ens_info.subchans[i].ASCTy = -1; }
   (*dab)->ens_info.CIFCount_hi = 0xff;

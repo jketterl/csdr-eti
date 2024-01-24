@@ -3,9 +3,11 @@
 #include <unistd.h>
 
 #include "dab.hpp"
-#include "depuncture.h"
+#include "misc.hpp"
+#include "depuncture.hpp"
+extern "C" {
 #include "viterbi.h"
-#include "misc.h"
+}
 
 void merge_info(struct ens_info_t* ei, struct tf_info_t *info)
 {
@@ -321,7 +323,7 @@ void create_eti(struct dab_state_t* dab)
 
   /* Call the user's callback to do process the ETI */
   if (dab->eti_callback) {
-    dab->eti_callback(eti, dab->callback_ctx);
+    dab->eti_callback(eti);
   }
   
   /* Increment CIF count */

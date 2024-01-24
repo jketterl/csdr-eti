@@ -25,7 +25,9 @@
 #include <stdio.h>
 
 #include "dab.hpp"
+extern "C" {
 #include "dab_tables.h"
+}
 
 #define BLKSIZE 128
 

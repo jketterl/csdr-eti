@@ -17,11 +17,10 @@ extern "C" {
 using namespace Csdr::Eti;
 
 EtiDecoder::EtiDecoder() {
-    init_dab_state(&dab, [](uint8_t* eti, void* ctx) {
-        EtiDecoder* me = (EtiDecoder*) ctx;
-        std::memcpy(me->writer->getWritePointer(), eti, 6144);
-        me->writer->advance(6144);
-    }, this);
+    init_dab_state(&dab, [this](uint8_t* eti) {
+        std::memcpy(this->writer->getWritePointer(), eti, 6144);
+        this->writer->advance(6144);
+    });
     forward_plan = fftwf_plan_dft_1d(2048, nullptr, nullptr, FFTW_FORWARD, FFTW_ESTIMATE);
     backward_plan = fftwf_plan_dft_1d(1536, nullptr, nullptr, FFTW_BACKWARD, FFTW_ESTIMATE);
     coarse_plan = fftwf_plan_dft_1d(128, nullptr, nullptr, FFTW_BACKWARD, FFTW_ESTIMATE);

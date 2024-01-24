@@ -5,11 +5,13 @@
 #include <stdbool.h>
 
 #include "dab.hpp"
-#include "fic.h"
-#include "depuncture.h"
+#include "fic.hpp"
+#include "depuncture.hpp"
+#include "misc.hpp"
+extern "C" {
 #include "viterbi.h"
-#include "misc.h"
 #include "dab_tables.h"
+}
 
 static int dump_buffer(char *name, char *buf, int blen)
 {
