@@ -3,7 +3,7 @@
 #include <csdr/module.hpp>
 #include <csdr/complex.hpp>
 #include "meta.hpp"
-#include "dab.h"
+#include "dab.hpp"
 
 extern "C" {
 #include <fftw3.h>

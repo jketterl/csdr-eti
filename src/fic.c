@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "dab.h"
+#include "dab.hpp"
 #include "fic.h"
 #include "depuncture.h"
 #include "viterbi.h"

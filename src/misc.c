@@ -2,7 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "dab.h"
+#include "dab.hpp"
 #include "depuncture.h"
 #include "viterbi.h"
 #include "misc.h"

@@ -2,16 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "dab.h"
+#include "dab.hpp"
+
+extern "C" {
 #include "viterbi.h"
 #include "fic.h"
 #include "misc.h"
+};
 
 void init_dab_state(struct dab_state_t **dab, void (* eti_callback)(uint8_t *eti, void* ctx), void* ctx)
 {
   int i;
 
-  *dab = calloc(sizeof(struct dab_state_t),1);
+  *dab = (struct dab_state_t*) calloc(sizeof(struct dab_state_t),1);
 
   (*dab)->eti_callback = eti_callback;
   (*dab)->callback_ctx = ctx;

@@ -1,4 +1,4 @@
-add_library(csdr-eti SHARED csdr-eti.cpp meta.cpp version.cpp dab_tables.c dab.c fic.c misc.c viterbi.c depuncture.c)
+add_library(csdr-eti SHARED csdr-eti.cpp meta.cpp version.cpp dab_tables.c dab.cpp fic.c misc.c viterbi.c depuncture.c)
 file(GLOB LIBCSDRETI_HEADERS
     "${PROJECT_SOURCE_DIR}/include/*.hpp"
     "${PROJECT_SOURCE_DIR}/include/*.h"
