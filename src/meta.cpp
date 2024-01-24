@@ -16,9 +16,16 @@ MetaWriter::~MetaWriter() {
 PipelineMetaWriter::PipelineMetaWriter(Serializer *serializer): MetaWriter(serializer) {}
 
 void PipelineMetaWriter::sendMetaData(std::map<std::string, std::string> data) {
-    std::string metaString = serializer->serialize(data);
+    this->sendString(serializer->serialize(data));
+}
+
+void PipelineMetaWriter::sendProgrammes(std::map<uint16_t, std::string> programmes) {
+    this->sendString(serializer->serializeProgrammes(programmes));
+}
+
+void PipelineMetaWriter::sendString(std::string str) {
     // can't write...
-    if (writer->writeable() < metaString.length()) return;
-    std::memcpy(writer->getWritePointer(), metaString.c_str(), metaString.length());
-    writer->advance(metaString.length());
+    if (writer->writeable() < str.length()) return;
+    std::memcpy(writer->getWritePointer(), str.c_str(), str.length());
+    writer->advance(str.length());
 }

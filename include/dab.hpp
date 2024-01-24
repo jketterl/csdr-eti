@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <vector>
 
 /* A demapped transmission frame represents a transmission frame in
    the final state before the FIC-specific and MSC-specific decoding
@@ -41,6 +42,13 @@ struct subchannel_info_t {
     int ASCTy;
 };
 
+struct programme_label_t {
+    uint8_t charset;
+    uint16_t service_id;
+    char label[16];
+    uint16_t label_character_flags;
+};
+
 /* The information from the FIBs required to construct the ETI stream */
 struct tf_info_t {
     uint16_t EId;           /* Ensemble ID */
@@ -53,6 +61,7 @@ struct tf_info_t {
        multiple transmission frames.
     */
     struct subchannel_info_t subchans[64];
+    std::vector<struct programme_label_t> programmes;
 };
 
 struct ens_info_t {
@@ -65,7 +74,6 @@ struct ens_info_t {
 struct dab_state_t
 {
     struct demapped_transmission_frame_t tfs[5]; /* We need buffers for 5 tranmission frames - the four previous, plus the new */
-    struct tf_info_t tf_info;
     struct ens_info_t ens_info;
 
     unsigned char* cifs_msc[16];  /* Each CIF consists of 3072*18 bits */
@@ -78,7 +86,8 @@ struct dab_state_t
 
     /* Callback function to process a decoded ETI frame */
     std::function<void(uint8_t* eti)> eti_callback;
+    std::function<void(uint16_t EId, std::vector<struct programme_label_t> programmes)> programme_callback;
 };
 
-struct dab_state_t* init_dab_state(std::function<void(uint8_t* eti)> eti_callback);
+struct dab_state_t* init_dab_state();
 void dab_process_frame(struct dab_state_t *dab);

@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include <string>
+#include <algorithm>
+
 #include "dab.hpp"
 #include "fic.hpp"
 #include "depuncture.hpp"
@@ -129,36 +132,42 @@ void fib_parse(struct tf_info_t* info, uint8_t* fib)
             uint8_t extension = fib[i] & 0x07;
             if (extension == 1) {
                 uint16_t service_id = (fib[i + 1] << 8) | fib[i + 2];
-                // we get 16 characters but may need our own null terminator
-                char* label = (char*) malloc(17);
-                memcpy(label, &fib[i + 3], 16);
-                // make sure it's terminated
-                label[16] = 0x0;
-
-                //fprintf(stderr, "FIB 1/1: service id %x, label %s\n", service_id, label);
-
-                free(label);
+                uint16_t character_flags = (fib[19] << 8) | fib[20];
+                struct programme_label_t label = {
+                    .charset = charset,
+                    .service_id = service_id,
+                    .label_character_flags = character_flags,
+                };
+                memcpy(&label.label, &fib[i + 3], 16);
+                // TODO: convert charset
+                info->programmes.push_back(label);
             }
         }
         i += len;
     }
 }
 
-void fib_decode(struct tf_info_t *info, struct tf_fibs_t *fibs, int nfibs)
-{
+struct tf_info_t fib_decode(struct tf_fibs_t *fibs, int nfibs) {
     int i;
 
     /* Initialise the info struct */
-    memset(info, 0, sizeof(struct tf_info_t));
-    for (i=0;i<64;i++) { info->subchans[i].id = -1; info->subchans[i].ASCTy = -1; }
+    struct tf_info_t info {
+        .EId = 0,
+        .CIFCount_hi = 0,
+        .CIFCount_lo = 0,
+    };
+
+    std::fill(info.subchans, info.subchans + 64, (struct subchannel_info_t) {.id = -1, .ASCTy = -1});
 
     /* Parse nfibs FIBs */
-    for (i=0;i<nfibs;i++) {
+    for (i = 0; i < nfibs; i++) {
         if (fibs->FIB_CRC_OK[i]) {
             //fprintf(stderr,"fib_parse(%d)\n",i);
-            fib_parse(info, fibs->FIB[i]);
+            fib_parse(&info, fibs->FIB[i]);
         }
     }
+
+    return info;
 }
 
 /* A NULL FIB with valid CRC */

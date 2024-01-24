@@ -13,14 +13,43 @@ extern "C" {
 #include <iostream>
 #include <cstring>
 #include <functional>
+#include <utility>
+#include <algorithm>
 
 using namespace Csdr::Eti;
 
 EtiDecoder::EtiDecoder() {
-    dab = init_dab_state([this](uint8_t* eti) {
+    dab = init_dab_state();
+    dab->eti_callback = [this](uint8_t* eti) {
         std::memcpy(this->writer->getWritePointer(), eti, 6144);
         this->writer->advance(6144);
-    });
+    };
+    dab->programme_callback = [this](uint16_t EId, std::vector<struct programme_label_t> new_progs) {
+        bool touched = false;
+        // rebuild the list of programmes when the ensemble changes (user may have tuned a new frequency)
+        if (EId != ensemble_id) {
+            touched = true;
+            ensemble_id = EId;
+            programmes.clear();
+        }
+        for (struct programme_label_t l: new_progs) {
+            auto label = std::string(l.label, 16);
+            // trim
+            label.erase(std::find_if(label.rbegin(), label.rend(), [](unsigned char ch) {
+                return !std::isspace(ch);
+            }).base(), label.end());
+
+            if (programmes.find(l.service_id) == programmes.end()) {
+                programmes[l.service_id] = label;
+                touched = true;
+            } else {
+                touched = touched || programmes[l.service_id] != label;
+                programmes[l.service_id] = label;
+            }
+        }
+        if (!touched || metawriter == nullptr) return;
+        metawriter->sendProgrammes(programmes);
+    };
     forward_plan = fftwf_plan_dft_1d(2048, nullptr, nullptr, FFTW_FORWARD, FFTW_ESTIMATE);
     backward_plan = fftwf_plan_dft_1d(1536, nullptr, nullptr, FFTW_BACKWARD, FFTW_ESTIMATE);
     coarse_plan = fftwf_plan_dft_1d(128, nullptr, nullptr, FFTW_BACKWARD, FFTW_ESTIMATE);

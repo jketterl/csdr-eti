@@ -4,6 +4,8 @@
 #include <csdr/complex.hpp>
 #include "meta.hpp"
 #include "dab.hpp"
+#include <map>
+#include <string>
 
 extern "C" {
 #include <fftw3.h>
@@ -31,6 +33,8 @@ namespace Csdr::Eti {
             double get_fine_freq_corr(Csdr::complex<float>* input);
             struct dab_state_t* dab = nullptr;
             MetaWriter* metawriter = nullptr;
+            uint16_t ensemble_id = 0;
+            std::map<uint16_t, std::string> programmes;
 
             fftwf_plan forward_plan;
             fftwf_plan backward_plan;

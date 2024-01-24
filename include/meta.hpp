@@ -10,6 +10,7 @@ namespace Csdr::Eti {
         public:
             virtual ~Serializer() = default;
             virtual std::string serialize(std::map<std::string, std::string> data) = 0;
+            virtual std::string serializeProgrammes(std::map<uint16_t, std::string> data) = 0;
     };
 
     class MetaWriter {
@@ -17,6 +18,7 @@ namespace Csdr::Eti {
             explicit MetaWriter(Serializer* serializer);
             virtual ~MetaWriter();
             virtual void sendMetaData(std::map<std::string, std::string> data) = 0;
+            virtual void sendProgrammes(std::map<uint16_t, std::string> programmes) = 0;
         protected:
             Serializer* serializer;
     };
@@ -25,6 +27,9 @@ namespace Csdr::Eti {
         public:
             explicit PipelineMetaWriter(Serializer* serializer);
             void sendMetaData(std::map<std::string, std::string> data) override;
+            void sendProgrammes(std::map<uint16_t, std::string> programmes) override;
+        private:
+            void sendString(std::string str);
     };
 
 }

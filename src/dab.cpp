@@ -12,12 +12,10 @@ extern "C" {
 #include "viterbi.h"
 };
 
-struct dab_state_t* init_dab_state(std::function<void(uint8_t* eti)> eti_callback) {
+struct dab_state_t* init_dab_state() {
     int i;
 
     struct dab_state_t* dab = (struct dab_state_t*) calloc(sizeof(struct dab_state_t),1);
-
-    dab->eti_callback = std::move(eti_callback);
 
     for (i = 0; i < 64; i++) {
         dab->ens_info.subchans[i].id = -1;
@@ -34,13 +32,15 @@ struct dab_state_t* init_dab_state(std::function<void(uint8_t* eti)> eti_callbac
 void dab_process_frame(struct dab_state_t *dab)
 {
     int i;
+    struct tf_info_t tf_info{};
 
     fic_decode(&dab->tfs[dab->tfidx]);
     if (dab->tfs[dab->tfidx].fibs.ok_count > 0) {
         //fprintf(stderr,"Decoded FIBs - ok_count=%d\n",dab->tfs[dab->tfidx].fibs.ok_count);
-        fib_decode(&dab->tf_info,&dab->tfs[dab->tfidx].fibs,12);
+        tf_info = fib_decode( &dab->tfs[dab->tfidx].fibs,12);
         //dump_tf_info(&dab->tf_info);
     }
+    dab->programme_callback(tf_info.EId, tf_info.programmes);
 
     if (dab->tfs[dab->tfidx].fibs.ok_count >= FIB_CRC_LOCK_VALUE_TRESHOLD) {
         dab->okcount++;
@@ -65,7 +65,7 @@ void dab_process_frame(struct dab_state_t *dab)
         if (wrong_fibs > 0)
             fprintf(stderr, "Received %d FIBs with CRC mismatch\n", wrong_fibs);
 
-        merge_info(&dab->ens_info,&dab->tf_info);  /* Only merge the info once we are locked */
+        merge_info(&dab->ens_info, &tf_info);  /* Only merge the info once we are locked */
         if (dab->ncifs < 16) {
             /* Initial buffer fill */
             //fprintf(stderr,"Initial buffer fill - dab->ncifs=%d, dab->tfidx=%d\n",dab->ncifs,dab->tfidx);
