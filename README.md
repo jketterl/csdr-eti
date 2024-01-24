@@ -46,3 +46,26 @@ Please report any errors or shortcomings in these acknowledgements. I do not wis
 ### Output
 - ETI binary stream represented as `uint8_t`. Can be converted to other 8-bit data types as required.
 - Data rate is inconsistend, depending on signal quality. Maximum data rate tbd.
+
+## Installation
+
+The OpenWebRX project is hosting csdr-eti packages in their repositories. Please click the respective link for [Debian](https://www.openwebrx.de/download/debian.php) or [Ubuntu](https://www.openwebrx.de/download/ubuntu.php).
+
+## Compiling from source
+
+### Requirements
+
+Please make sure you install the following dependencies before compiling csdr-eti:
+
+- [csdr](https://github.com/jketterl/csdr) (version 0.18 or later)
+- [fftw3](https://www.fftw.org/)
+
+This project comes with a cmake build. It is recommended to build in a separate directory.
+
+```
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
+```
