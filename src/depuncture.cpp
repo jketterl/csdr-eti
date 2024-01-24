@@ -38,9 +38,9 @@ extern "C" {
 static inline int to_viterbi(int x)
 {
 #ifdef ENABLE_SPIRAL_VITERBI
-  return ((x == 0) ? 0 : 255);
+    return ((x == 0) ? 0 : 255);
 #else
-  return (OFFSET-1) + 2*x;
+    return (OFFSET-1) + 2*x;
 #endif
 }
 
@@ -55,7 +55,7 @@ void fic_depuncture(uint8_t *obuf, uint8_t *inbuf)
             *(obuf++) = to_viterbi(*(inbuf++));
             *(obuf++) = to_viterbi(*(inbuf++));
             *(obuf++) = to_viterbi(*(inbuf++));
-            *(obuf++) = OFFSET;           
+            *(obuf++) = OFFSET;
         }
     }
     for (i=21*BLKSIZE; i<24*BLKSIZE; i+=32)
@@ -65,12 +65,12 @@ void fic_depuncture(uint8_t *obuf, uint8_t *inbuf)
             *(obuf++) = to_viterbi(*(inbuf++));
             *(obuf++) = to_viterbi(*(inbuf++));
             *(obuf++) = to_viterbi(*(inbuf++));
-            *(obuf++) = OFFSET;           
+            *(obuf++) = OFFSET;
         }
         *(obuf++) = to_viterbi(*(inbuf++));
         *(obuf++) = to_viterbi(*(inbuf++));
-        *(obuf++) = OFFSET;           
-        *(obuf++) = OFFSET;           
+        *(obuf++) = OFFSET;
+        *(obuf++) = OFFSET;
     }
     for (j=0; j<6; j++)
     {
@@ -80,55 +80,55 @@ void fic_depuncture(uint8_t *obuf, uint8_t *inbuf)
         *(obuf++) = OFFSET;
     }
 
-   return;
+    return;
 }
 
 void uep_depuncture(uint8_t *obuf, uint8_t *inbuf, struct subchannel_info_t *s, int* len)
 {
-	int i, j, k, indx;
-	const struct uepprof p = ueptable[s->uep_index];
+    int i, j, k, indx;
+    const struct uepprof p = ueptable[s->uep_index];
 
-	j = 0;
-	k = 0;
-	for (indx=0; indx < 4; indx++)
-		for (i=0; i < BLKSIZE * p.l[indx]; i++) {
-			if (pvec[p.pi[indx]][i % 32])
-				*(obuf + k++) = to_viterbi(*(inbuf + j++));
-			else
-				*(obuf + k++) = OFFSET;
-		}
-	/* Depuncture remaining 24 bits using rate 8/16 */ 
-	for (i=0; i < 24; i++)
-		if (pvec[7][i % 32])
-			*(obuf + k++) = to_viterbi(*(inbuf + j++));
-		else
-			*(obuf + k++) = OFFSET;
-	*len = k;
+    j = 0;
+    k = 0;
+    for (indx=0; indx < 4; indx++)
+        for (i=0; i < BLKSIZE * p.l[indx]; i++) {
+            if (pvec[p.pi[indx]][i % 32])
+                *(obuf + k++) = to_viterbi(*(inbuf + j++));
+            else
+                *(obuf + k++) = OFFSET;
+        }
+    /* Depuncture remaining 24 bits using rate 8/16 */
+    for (i=0; i < 24; i++)
+        if (pvec[7][i % 32])
+            *(obuf + k++) = to_viterbi(*(inbuf + j++));
+        else
+            *(obuf + k++) = OFFSET;
+    *len = k;
 }
 
 void eep_depuncture(uint8_t *obuf, uint8_t *inbuf, struct subchannel_info_t *s, int* len)
 {
-	int i, j, k, n, indx;
-	struct eepprof p = eeptable[s->protlev];
+    int i, j, k, n, indx;
+    struct eepprof p = eeptable[s->protlev];
 
-	/* Special case for bitrate == 8 with EEP 2-A */
-	if ((s->bitrate == 8) && (s->protlev == 1))
-		p = eep2a8kbps;
-	j = 0;
-	k = 0;
-	n = s->size/p.sizemul;
-	for (indx=0; indx < 2; indx++)
-		for (i=0; i < BLKSIZE * (p.l[indx].mul * n + p.l[indx].offset); i++) {
-			if (pvec[p.pi[indx]][i % 32])
-				*(obuf + k++) = to_viterbi(*(inbuf + j++));
-			else
-				*(obuf + k++) = OFFSET;
-		}
-	/* Depuncture remaining 24 bits using rate 8/16 */ 
-	for (i=0; i < 24; i++)
-		if (pvec[7][i % 32])
-			*(obuf + k++) = to_viterbi(*(inbuf + j++));
-		else
-			*(obuf + k++) = OFFSET;
-	*len = k;
+    /* Special case for bitrate == 8 with EEP 2-A */
+    if ((s->bitrate == 8) && (s->protlev == 1))
+        p = eep2a8kbps;
+    j = 0;
+    k = 0;
+    n = s->size/p.sizemul;
+    for (indx=0; indx < 2; indx++)
+        for (i=0; i < BLKSIZE * (p.l[indx].mul * n + p.l[indx].offset); i++) {
+            if (pvec[p.pi[indx]][i % 32])
+                *(obuf + k++) = to_viterbi(*(inbuf + j++));
+            else
+                *(obuf + k++) = OFFSET;
+        }
+    /* Depuncture remaining 24 bits using rate 8/16 */
+    for (i=0; i < 24; i++)
+        if (pvec[7][i % 32])
+            *(obuf + k++) = to_viterbi(*(inbuf + j++));
+        else
+            *(obuf + k++) = OFFSET;
+    *len = k;
 }

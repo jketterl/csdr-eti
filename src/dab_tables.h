@@ -4,22 +4,22 @@
 #include <stdint.h>
 
 struct uepprof {
-  unsigned int bitrate;
-  unsigned int subchsz;
-  unsigned int protlvl;
-  int l[4];
-  int pi[4];
-  int padbits;
+    unsigned int bitrate;
+    unsigned int subchsz;
+    unsigned int protlvl;
+    int l[4];
+    int pi[4];
+    int padbits;
 };
 
 struct eepprof {
-  int sizemul;
-  int ratemul;
-  struct {
-    int mul;
-    int offset;
-  } l[2];
-  int pi[2];
+    int sizemul;
+    int ratemul;
+    struct {
+        int mul;
+        int offset;
+    } l[2];
+    int pi[2];
 };
 
 extern const struct uepprof ueptable[];
