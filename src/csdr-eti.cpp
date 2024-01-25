@@ -4,6 +4,7 @@ david.may.muc@googlemail.com
 */
 
 #include "csdr-eti.hpp"
+#include "ebu_chars.hpp"
 
 extern "C" {
 #include "sdr_prstab.h"
@@ -13,8 +14,9 @@ extern "C" {
 #include <iostream>
 #include <cstring>
 #include <functional>
-#include <utility>
 #include <algorithm>
+#include <locale>
+#include <codecvt>
 
 using namespace Csdr::Eti;
 
@@ -185,15 +187,36 @@ void EtiDecoder::processInfo(struct tf_info_t tf_info) {
     }
 }
 
-std::string EtiDecoder::decodeLabel(char label[16], uint8_t charset) {
-    auto result = std::string(label, 16);
+std::string EtiDecoder::decodeLabel(unsigned char label[16], uint8_t charset) {
+    std::string result;
+    if (charset == 0) {
+        result = decodeEbuCharset(label);
+    } else {
+        // TODO missing charset:
+        // 6 = ISO/IEC 10646 [26] using UCS-2 transformation format, big endian byte order
+        // 15 = ISO/IEC 10646 [26] using UTF-8 transformation format
+        // see ETSI TS 101 756 claus 5.2
+        // 15 should work, at least in theory, with this
+        result = std::string((char*) &label, 16);
+    }
     // trim
     result.erase(std::find_if(result.rbegin(), result.rend(), [](unsigned char ch) {
         return !std::isspace(ch);
     }).base(), result.end());
 
-    // todo: charset conversion
     return result;
+}
+
+std::string EtiDecoder::decodeEbuCharset(unsigned char label[16]) {
+    wchar_t translated[16];
+    for (int i = 0; i < 16; i++) {
+        translated[i] = ebu_charset[label[i]];
+    }
+
+    using convert_type = std::codecvt_utf8<wchar_t>;
+    std::wstring_convert<convert_type, wchar_t> converter;
+
+    return converter.to_bytes(std::wstring(translated, 16));
 }
 
 uint32_t EtiDecoder::get_coarse_time_sync(Csdr::complex<float>* input) {

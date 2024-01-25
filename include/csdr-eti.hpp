@@ -43,7 +43,8 @@ namespace Csdr::Eti {
 
             void sendMetaData(std::map<std::string, std::string> data);
             void processInfo(struct tf_info_t tf_info);
-            std::string decodeLabel(char label[16], uint8_t charset);
+            std::string decodeLabel(unsigned char label[16], uint8_t charset);
+            std::string decodeEbuCharset(unsigned char label[16]);
     };
 
 }

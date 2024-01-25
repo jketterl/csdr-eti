@@ -45,14 +45,14 @@ struct subchannel_info_t {
 struct programme_label_t {
     uint8_t charset;
     uint16_t service_id;
-    char label[16];
+    unsigned char label[16];
     uint16_t label_character_flags;
 };
 
 struct ensemble_label_t {
     uint8_t charset;
     uint16_t ensemble_id;
-    char label [16];
+    unsigned char label [16];
     uint16_t label_character_flags;
 };
 
