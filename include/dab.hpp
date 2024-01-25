@@ -49,6 +49,13 @@ struct programme_label_t {
     uint16_t label_character_flags;
 };
 
+struct ensemble_label_t {
+    uint8_t charset;
+    uint16_t ensemble_id;
+    char label [16];
+    uint16_t label_character_flags;
+};
+
 /* The information from the FIBs required to construct the ETI stream */
 struct tf_info_t {
     uint16_t EId;           /* Ensemble ID */
@@ -61,6 +68,7 @@ struct tf_info_t {
        multiple transmission frames.
     */
     struct subchannel_info_t subchans[64];
+    struct ensemble_label_t ensembleLabel;
     std::vector<struct programme_label_t> programmes;
 };
 
@@ -86,8 +94,7 @@ struct dab_state_t
 
     /* Callback function to process a decoded ETI frame */
     std::function<void(uint8_t* eti)> eti_callback;
-    std::function<void(uint16_t EId, std::vector<struct programme_label_t> programmes)> programme_callback;
 };
 
 struct dab_state_t* init_dab_state();
-void dab_process_frame(struct dab_state_t *dab);
+struct tf_info_t dab_process_frame(struct dab_state_t *dab);

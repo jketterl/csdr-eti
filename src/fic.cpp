@@ -130,7 +130,17 @@ void fib_parse(struct tf_info_t* info, uint8_t* fib)
             uint8_t charset = (fib[i] & 0xF0) >> 4;
             bool Rfu = (fib[i] & 0x08) >> 3;
             uint8_t extension = fib[i] & 0x07;
-            if (extension == 1) {
+            if (extension == 0) { // FIG 1/0 ensemble label
+                uint16_t ensemble_id = (fib[i + 1] << 8) | fib[i + 2];
+                uint16_t character_flags = (fib[19] << 8) | fib[20];
+                struct ensemble_label_t label = {
+                    .charset = charset,
+                    .ensemble_id = ensemble_id,
+                    .label_character_flags = character_flags,
+                };
+                memcpy(&label.label, &fib[i + 3], 16);
+                info->ensembleLabel = label;
+            } else if (extension == 1) { // FIG 1/1 programme service label
                 uint16_t service_id = (fib[i + 1] << 8) | fib[i + 2];
                 uint16_t character_flags = (fib[19] << 8) | fib[20];
                 struct programme_label_t label = {
@@ -139,7 +149,6 @@ void fib_parse(struct tf_info_t* info, uint8_t* fib)
                     .label_character_flags = character_flags,
                 };
                 memcpy(&label.label, &fib[i + 3], 16);
-                // TODO: convert charset
                 info->programmes.push_back(label);
             }
         }

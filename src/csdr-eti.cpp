@@ -24,32 +24,6 @@ EtiDecoder::EtiDecoder() {
         std::memcpy(this->writer->getWritePointer(), eti, 6144);
         this->writer->advance(6144);
     };
-    dab->programme_callback = [this](uint16_t EId, std::vector<struct programme_label_t> new_progs) {
-        bool touched = false;
-        // rebuild the list of programmes when the ensemble changes (user may have tuned a new frequency)
-        if (EId != ensemble_id) {
-            touched = true;
-            ensemble_id = EId;
-            programmes.clear();
-        }
-        for (struct programme_label_t l: new_progs) {
-            auto label = std::string(l.label, 16);
-            // trim
-            label.erase(std::find_if(label.rbegin(), label.rend(), [](unsigned char ch) {
-                return !std::isspace(ch);
-            }).base(), label.end());
-
-            if (programmes.find(l.service_id) == programmes.end()) {
-                programmes[l.service_id] = label;
-                touched = true;
-            } else {
-                touched = touched || programmes[l.service_id] != label;
-                programmes[l.service_id] = label;
-            }
-        }
-        if (!touched || metawriter == nullptr) return;
-        metawriter->sendProgrammes(programmes);
-    };
     forward_plan = fftwf_plan_dft_1d(2048, nullptr, nullptr, FFTW_FORWARD, FFTW_ESTIMATE);
     backward_plan = fftwf_plan_dft_1d(1536, nullptr, nullptr, FFTW_BACKWARD, FFTW_ESTIMATE);
     coarse_plan = fftwf_plan_dft_1d(128, nullptr, nullptr, FFTW_BACKWARD, FFTW_ESTIMATE);
@@ -81,7 +55,8 @@ void EtiDecoder::process() {
     Csdr::complex<float>* input = this->reader->getReadPointer();
 
     if (sdr_demod(input, &dab->tfs[dab->tfidx])) {
-        dab_process_frame(dab);
+        auto info = dab_process_frame(dab);
+        processInfo(info);
     }
 
     this->reader->advance(196608 + coarse_timeshift + fine_timeshift);
@@ -171,6 +146,54 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
     fftwf_free(symbols_d);
 
     return true;
+}
+
+void EtiDecoder::processInfo(struct tf_info_t tf_info) {
+    // not locked on yet
+    if (tf_info.EId == 0) return;
+
+    bool touched = false;
+    // rebuild the list of programmes when the ensemble changes (user may have tuned a new frequency)
+    if (tf_info.EId != ensemble_id) {
+        touched = true;
+        ensemble_id = tf_info.EId;
+        ensemble = "";
+        programmes.clear();
+        sendMetaData({ { "ensemble_id", std::to_string(ensemble_id) } });
+    }
+    for (struct programme_label_t l: tf_info.programmes) {
+        auto label = decodeLabel(l.label, l.charset);
+
+        if (programmes.find(l.service_id) == programmes.end()) {
+            programmes[l.service_id] = label;
+            touched = true;
+        } else {
+            touched = touched || programmes[l.service_id] != label;
+            programmes[l.service_id] = label;
+        }
+    }
+    if (touched && metawriter != nullptr) {
+        metawriter->sendProgrammes(programmes);
+    }
+
+    if (tf_info.ensembleLabel.ensemble_id != 0) {
+        auto label = decodeLabel(tf_info.ensembleLabel.label, tf_info.ensembleLabel.charset);
+        if (ensemble != label) {
+            sendMetaData({ { "ensemble_label", label } });
+        }
+        ensemble = label;
+    }
+}
+
+std::string EtiDecoder::decodeLabel(char label[16], uint8_t charset) {
+    auto result = std::string(label, 16);
+    // trim
+    result.erase(std::find_if(result.rbegin(), result.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), result.end());
+
+    // todo: charset conversion
+    return result;
 }
 
 uint32_t EtiDecoder::get_coarse_time_sync(Csdr::complex<float>* input) {

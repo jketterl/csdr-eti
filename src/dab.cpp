@@ -29,8 +29,7 @@ struct dab_state_t* init_dab_state() {
     return dab;
 }
 
-void dab_process_frame(struct dab_state_t *dab)
-{
+tf_info_t dab_process_frame(struct dab_state_t *dab) {
     int i;
     struct tf_info_t tf_info{};
 
@@ -40,7 +39,6 @@ void dab_process_frame(struct dab_state_t *dab)
         tf_info = fib_decode( &dab->tfs[dab->tfidx].fibs,12);
         //dump_tf_info(&dab->tf_info);
     }
-    dab->programme_callback(tf_info.EId, tf_info.programmes);
 
     if (dab->tfs[dab->tfidx].fibs.ok_count >= FIB_CRC_LOCK_VALUE_TRESHOLD) {
         dab->okcount++;
@@ -56,7 +54,7 @@ void dab_process_frame(struct dab_state_t *dab)
             fprintf(stderr,"Lock lost, resetting ringbuffer\n");
             dab->ncifs = 0;
             dab->tfidx = 0;
-            return;
+            return tf_info;
         }
     }
 
@@ -99,4 +97,6 @@ void dab_process_frame(struct dab_state_t *dab)
         }
         dab->tfidx = (dab->tfidx + 1) % 5;
     }
+
+    return tf_info;
 }

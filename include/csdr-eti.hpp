@@ -35,12 +35,15 @@ namespace Csdr::Eti {
             MetaWriter* metawriter = nullptr;
             uint16_t ensemble_id = 0;
             std::map<uint16_t, std::string> programmes;
+            std::string ensemble;
 
             fftwf_plan forward_plan;
             fftwf_plan backward_plan;
             fftwf_plan coarse_plan;
 
             void sendMetaData(std::map<std::string, std::string> data);
+            void processInfo(struct tf_info_t tf_info);
+            std::string decodeLabel(char label[16], uint8_t charset);
     };
 
 }
