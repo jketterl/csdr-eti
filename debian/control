@@ -1,0 +1,20 @@
+Source: csdr-eti
+Maintainer: Jakob Ketterl <jakob.ketterl@gmx.de>
+Section: hamradio
+Priority: optional
+Rules-Requires-Root: no
+Standards-Version: 4.3.0
+Build-Depends: debhelper (>= 12), cmake, libfftw3-dev (>= 3.3), libcsdr-dev (>= 0.19)
+
+Package: libcsdr-eti0
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: DAB ETI decoder as a csdr module
+ An implementation of a DAB ETI decoder that can be used as the first stage of
+ a DAB receiver pipeline. It cn demodulate a DAB Mode I Mux from IQ data and
+ output it as the corresponding ETI stream if successful.
+
+Package: libcsdr-eti-dev
+Architecture: any
+Depends: libcsdr-eti0 (=${binary:Version}), libfftw3-dev (>= 3.3), libcsdr-dev(>= 0.19), ${misc:Depends}
+Description: development debendencis for libcsdr-eti
