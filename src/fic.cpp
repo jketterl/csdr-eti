@@ -169,6 +169,20 @@ void fib_parse(struct tf_info_t* info, uint8_t* fib)
                 memcpy(&label.label, &fib[i + 3], 16);
                 info->programmes.push_back(label);
             }
+        /*
+        // this is all theoretical, i never encountered a type 2 on the air.
+        } else if (type == 2) {
+            bool toggle = (fib[i] & 0x80) >> 7;
+            uint8_t segment_index = (fib[i] & 0x70) >> 4;
+            bool Rfu = (fib[i] & 0x08) >> 3;
+            uint8_t extension = fib[i] & 0x07;
+            std::cerr << "FIG " << type << "/" << extension << std::endl;
+            if (extension == 1) { // FIG 2/1 programme service label in UTF
+                uint16_t service_id = (fib[i + 1] << 8) | fib[i + 2];
+                auto label = std::string((char*) &fib[i + 3], len - 3);
+                //std::cerr << "FIG 2/1 label for " << std::hex << service_id << ": " << label << std::endl;
+            }
+        */
         }
         i += len;
     }
