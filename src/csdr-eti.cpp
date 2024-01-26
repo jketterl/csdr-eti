@@ -13,10 +13,10 @@ extern "C" {
 
 #include <iostream>
 #include <cstring>
-#include <functional>
 #include <algorithm>
 #include <locale>
 #include <codecvt>
+#include <utility>
 
 using namespace Csdr::Eti;
 
@@ -46,7 +46,7 @@ void EtiDecoder::setMetaWriter(MetaWriter *writer) {
 
 void EtiDecoder::sendMetaData(std::map<std::string, datatype> data) {
     if (metawriter == nullptr) return;
-    metawriter->sendMetaData(data);
+    metawriter->sendMetaData(std::move(data));
 }
 
 bool EtiDecoder::canProcess() {
@@ -232,7 +232,7 @@ uint32_t EtiDecoder::get_coarse_time_sync(Csdr::complex<float>* input) {
     float e = 0;
     float threshold = 40;
     for (k = 0; k < tnull; k += 10)
-        e += fabs(input[k].i());
+        e += fabsf(input[k].i());
 
     if (e < threshold && !force_timesync)
         return 0;
@@ -244,7 +244,7 @@ uint32_t EtiDecoder::get_coarse_time_sync(Csdr::complex<float>* input) {
         filt[j] = 0;
     for (j = 0; j < 196608 - tnull; j+=10)
         for (k = 0; k < tnull; k += 10)
-            filt[j / 10] = filt[j / 10] + fabs(input[j + k].i());
+            filt[j / 10] = filt[j / 10] + fabsf(input[j + k].i());
 
     // finding the minimum in filtered data gives position of null symbol
     float minVal = 9999999;
@@ -283,7 +283,7 @@ int32_t EtiDecoder::get_fine_time_sync(Csdr::complex<float> *input) {
        however we can simply shift the bins */
     fftwf_complex prs_rec_shift[1536];
     // TODO allow for coarse frequency shift !=0
-    int32_t cf_shift = 0;
+    // int32_t cf_shift = 0;
     // matlab notation (!!!-1)
     // 769:1536+s
     //  2:769+s why 2? I dont remember, but peak is very strong
@@ -310,11 +310,11 @@ int32_t EtiDecoder::get_fine_time_sync(Csdr::complex<float> *input) {
     fftwf_complex convoluted_prs_time[1536];
     fftwf_execute_dft(backward_plan, &convoluted_prs[0], &convoluted_prs_time[0]);
 
-    uint32_t maxPos=0;
-    float tempVal = 0;
+    int32_t maxPos=0;
+    float tempVal;
     float maxVal =- 99999;
     for (i=0;i<1536;i++) {
-        tempVal = sqrt((convoluted_prs_time[i][0] * convoluted_prs_time[i][0]) + (convoluted_prs_time[i][1] * convoluted_prs_time[i][1]));
+        tempVal = sqrtf((convoluted_prs_time[i][0] * convoluted_prs_time[i][0]) + (convoluted_prs_time[i][1] * convoluted_prs_time[i][1]));
         if (tempVal > maxVal) {
             maxPos = i;
             maxVal = tempVal;
@@ -361,13 +361,11 @@ int32_t EtiDecoder::get_coarse_freq_shift(Csdr::complex<float> *input) {
         fftwf_complex convoluted_prs_time[len];
         fftwf_execute_dft(coarse_plan, &convoluted_prs[0], &convoluted_prs_time[0]);
 
-        uint32_t maxPos = 0;
-        float tempVal = 0;
+        float tempVal;
         float maxVal=-99999;
         for (s=0;s<len;s++) {
-            tempVal = sqrt((convoluted_prs_time[s][0] * convoluted_prs_time[s][0]) + (convoluted_prs_time[s][1] * convoluted_prs_time[s][1]));
+            tempVal = sqrtf((convoluted_prs_time[s][0] * convoluted_prs_time[s][0]) + (convoluted_prs_time[s][1] * convoluted_prs_time[s][1]));
             if (tempVal>maxVal) {
-                maxPos = s;
                 maxVal = tempVal;
             }
         }
@@ -406,7 +404,7 @@ double EtiDecoder::get_fine_freq_corr(Csdr::complex<float> *input) {
     }
 
     for (i = 0; i < 504; i++){
-        angle[i] = atan2(lr[i][1],lr[i][0]);
+        angle[i] = atan2f(lr[i][1],lr[i][0]);
     }
     for (i = 0; i < 504; i++){
         mean = mean + angle[i];

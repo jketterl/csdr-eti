@@ -32,7 +32,7 @@ namespace Csdr::Eti {
             void sendMetaData(std::map<std::string, datatype> data) override;
             void sendProgrammes(std::map<uint16_t, std::string> programmes) override;
         private:
-            void sendString(std::string str);
+            void sendString(const std::string& str);
     };
 
 }

@@ -248,7 +248,6 @@ void create_eti(struct dab_state_t* dab)
 
     int len;
     int bits;
-    unsigned int metric;
     int obytes;
     int i;
     uint8_t eti[6144];

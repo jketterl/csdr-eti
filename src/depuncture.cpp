@@ -73,8 +73,6 @@ void fic_depuncture(uint8_t *obuf, uint8_t *inbuf)
         *(obuf++) = OFFSET;
         *(obuf++) = OFFSET;
     }
-
-    return;
 }
 
 void uep_depuncture(uint8_t *obuf, uint8_t *inbuf, struct subchannel_info_t *s, int* len)

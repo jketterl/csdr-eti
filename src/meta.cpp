@@ -23,7 +23,7 @@ void PipelineMetaWriter::sendProgrammes(std::map<uint16_t, std::string> programm
     this->sendString(serializer->serializeProgrammes(programmes));
 }
 
-void PipelineMetaWriter::sendString(std::string str) {
+void PipelineMetaWriter::sendString(const std::string& str) {
     // can't write...
     if (writer->writeable() < str.length()) return;
     std::memcpy(writer->getWritePointer(), str.c_str(), str.length());

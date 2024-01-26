@@ -222,7 +222,7 @@ static uint8_t null_fib[32] = {
 void fic_decode(struct demapped_transmission_frame_t *tf)
 {
     uint8_t tmp[3096];
-    int i,j,k;
+    int i,j;
 
     tf->fibs.ok_count = 0;
 
