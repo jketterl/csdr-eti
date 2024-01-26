@@ -1,6 +1,5 @@
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+#include <cstdio>
+#include <cstring>
 
 #include "dab.hpp"
 #include "misc.hpp"
@@ -33,7 +32,6 @@ void time_deinterleave(uint8_t* dst, uint8_t* cifs[])
         cif = map[i & 15];
         *dst++ = cifs[cif][i];
     }
-    return;
 }
 
 /* precalculated energy dispersal scrambler PRBS (period: 511 bytes) */
@@ -78,7 +76,6 @@ void dab_descramble_bytes(uint8_t *buf, int32_t nbytes)
     for (i=0; i<nbytes; i++) {
         buf[i] ^= scrambler_prbs[i % 511];
     }
-    return;
 }
 
 /* MPEG audio CRC: G(X) = X^16 + X^15 + X^2 + 1 */

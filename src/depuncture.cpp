@@ -22,8 +22,6 @@
 ** MSC UEP and EEP depuncturing
 */
 
-#include <stdio.h>
-
 #include "dab.hpp"
 extern "C" {
 #include "dab_tables.h"
@@ -37,11 +35,7 @@ extern "C" {
 /* 0 is a "strong 0" and 255 is a "strong 1" */
 static inline int to_viterbi(int x)
 {
-#ifdef ENABLE_SPIRAL_VITERBI
-    return ((x == 0) ? 0 : 255);
-#else
     return (OFFSET-1) + 2*x;
-#endif
 }
 
 void fic_depuncture(uint8_t *obuf, uint8_t *inbuf)
