@@ -12,7 +12,7 @@ project (csdr-eti VERSION 0.1.0)
 add_definitions(-DVERSION="${PROJECT_VERSION}-dev")
 
 enable_language(CXX)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 include(GNUInstallDirs)
 

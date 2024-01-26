@@ -125,6 +125,24 @@ void fib_parse(struct tf_info_t* info, uint8_t* fib)
                         j += 2;
                     }
                 }
+            } else if (ext == 10) { // FIG 0/10 date and time
+                bool Rfu = (fib[i + 1] & 0x80) >> 7;
+                uint32_t mjd = ((fib[i + 1] & 0x7F) << 10) | (fib[i + 2] << 2) | ((fib[i + 3] & 0xC0) >> 6);
+                bool LSI = (fib[i + 3] & 0x20) >> 5;
+                bool Rfa = (fib[i + 3] & 0x10) >> 4;
+                bool utc_flag = (fib[i + 3] & 0x08) >> 3;
+                if (utc_flag) {
+                    uint8_t hours = (fib[i + 3] & 0x07) << 2 | (fib[i + 4] & 0xC0) >> 6;
+                    uint8_t minutes = fib[i + 4] & 0x3F;
+                    uint8_t seconds = (fib[i + 5] & 0xFC) >> 2;
+                    uint16_t milliseconds = (fib[i + 5] & 0x03) << 2 | fib[i + 6];
+
+                    // MJD = modified julian date, where 0 = 1858-11-17.
+                    // we offset this to match UTC's 0 of 1970-01-01 (that's where the magic 40587 comes from).
+                    info->timestamp = (mjd - 40587) * 86400 + hours * 3600 + minutes * 60 + seconds;
+                //} else {
+                    // short format (deprecated)
+                }
             }
         } else if (type == 1) {
             uint8_t charset = (fib[i] & 0xF0) >> 4;

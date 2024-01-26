@@ -61,6 +61,7 @@ struct tf_info_t {
     uint16_t EId;           /* Ensemble ID */
     uint8_t CIFCount_hi;    /* 5 bits - 0 to 31 */
     uint8_t CIFCount_lo;    /* 8 bits - 0 to 249 */
+    uint64_t timestamp;
 
     /* Information on all subchannels defined by the FIBs in this
        tranmission frame.  Note that this may not be all the active

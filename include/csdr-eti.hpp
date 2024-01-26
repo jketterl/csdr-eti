@@ -41,7 +41,7 @@ namespace Csdr::Eti {
             fftwf_plan backward_plan;
             fftwf_plan coarse_plan;
 
-            void sendMetaData(std::map<std::string, std::string> data);
+            void sendMetaData(std::map<std::string, datatype> data);
             void processInfo(struct tf_info_t tf_info);
             std::string decodeLabel(unsigned char label[16], uint8_t charset);
             std::string decodeEbuCharset(unsigned char label[16]);

@@ -15,7 +15,7 @@ MetaWriter::~MetaWriter() {
 
 PipelineMetaWriter::PipelineMetaWriter(Serializer *serializer): MetaWriter(serializer) {}
 
-void PipelineMetaWriter::sendMetaData(std::map<std::string, std::string> data) {
+void PipelineMetaWriter::sendMetaData(std::map<std::string, datatype> data) {
     this->sendString(serializer->serialize(data));
 }
 

@@ -44,7 +44,7 @@ void EtiDecoder::setMetaWriter(MetaWriter *writer) {
     delete old;
 }
 
-void EtiDecoder::sendMetaData(std::map<std::string, std::string> data) {
+void EtiDecoder::sendMetaData(std::map<std::string, datatype> data) {
     if (metawriter == nullptr) return;
     metawriter->sendMetaData(data);
 }
@@ -80,7 +80,7 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
 
     coarse_freq_shift = get_coarse_freq_shift(input);
     if (abs(coarse_freq_shift) > 1) {
-        sendMetaData(std::map<std::string, std::string>{ {"coarse_frequency_shift", std::to_string(coarse_freq_shift)} });
+        sendMetaData({ {"coarse_frequency_shift", (uint64_t) coarse_timeshift} });
         //std::cerr << "coarse frequency shift: " << coarse_freq_shift << std::endl;
         force_timesync = true;
         return false;
@@ -88,7 +88,7 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
 
     fine_freq_shift = get_fine_freq_corr(input);
     if (fine_freq_shift != 0) {
-        sendMetaData(std::map<std::string, std::string>{ {"fine_frequency_shift", std::to_string(fine_freq_shift)} });
+        sendMetaData({ {"fine_frequency_shift", fine_freq_shift} });
         //std::cerr << "fine frequency shift: " << fine_freq_shift << std::endl;
     }
 
@@ -161,7 +161,7 @@ void EtiDecoder::processInfo(struct tf_info_t tf_info) {
         ensemble_id = tf_info.EId;
         ensemble = "";
         programmes.clear();
-        sendMetaData({ { "ensemble_id", std::to_string(ensemble_id) } });
+        sendMetaData({ { "ensemble_id", (uint64_t) ensemble_id } });
     }
     for (struct programme_label_t l: tf_info.programmes) {
         auto label = decodeLabel(l.label, l.charset);
@@ -184,6 +184,10 @@ void EtiDecoder::processInfo(struct tf_info_t tf_info) {
             sendMetaData({ { "ensemble_label", label } });
         }
         ensemble = label;
+    }
+
+    if (tf_info.timestamp) {
+        sendMetaData({ { "timestamp", tf_info.timestamp} });
     }
 }
 
