@@ -43,14 +43,14 @@ tf_info_t dab_process_frame(struct dab_state_t *dab) {
     if (dab->tfs[dab->tfidx].fibs.ok_count >= FIB_CRC_LOCK_VALUE_TRESHOLD) {
         dab->okcount++;
         if ((dab->okcount >= FIB_CRC_LOCK_COUNT_TRESHOLD) && (!dab->locked)) { // certain amount of successive relatively perfect sets of FICs, we are locked.
-            dab->locked = 1;
+            dab->locked = true;
             //fprintf(stderr,"Locked with center-frequency %dHz\n",sdr->frequency);
             fprintf(stderr,"Locked\n");
         }
     } else {
         dab->okcount = 0;
         if (dab->locked) {
-            dab->locked = 0;
+            dab->locked = false;
             fprintf(stderr,"Lock lost, resetting ringbuffer\n");
             dab->ncifs = 0;
             dab->tfidx = 0;
@@ -79,7 +79,7 @@ tf_info_t dab_process_frame(struct dab_state_t *dab) {
             if (!dab->ens_info_shown) {
                 dump_ens_info(&dab->ens_info);
                 //for (i=0;i<16;i++) { fprintf(stderr,"cifs_msc[%d]=%d\n",i,(int)cifs_msc[i]); }
-                dab->ens_info_shown = 1;
+                dab->ens_info_shown = true;
             }
             /* We have a full history of 16 CIFs, so we can output the
                oldest TF, which we do one CIF at a time */

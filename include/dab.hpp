@@ -89,8 +89,8 @@ struct dab_state_t
     unsigned char* cifs_fibs[16];  /* Each CIF consists of 3072*18 bits */
     int ncifs;  /* Number of CIFs in buffer - we need 16 to start outputting them */
     int tfidx;  /* Next tf buffer to read to. */
-    int locked;
-    int ens_info_shown;
+    bool locked;
+    bool ens_info_shown;
     int okcount;
 
     /* Callback function to process a decoded ETI frame */
