@@ -240,11 +240,10 @@ uint32_t EtiDecoder::get_coarse_time_sync(Csdr::complex<float>* input) {
     //fprintf(stderr,"Resync\n");
     // energy was to high so we assume we are not in sync
     // subsampled filter to detect where the null symbol is
+    memset(filt, 0, sizeof(float) * (196608 - tnull) / 10);
     for (j = 0; j < (196608 - tnull) / 10; j++)
-        filt[j] = 0;
-    for (j = 0; j < 196608 - tnull; j+=10)
         for (k = 0; k < tnull; k += 10)
-            filt[j / 10] = filt[j / 10] + fabsf(input[j + k].i());
+            filt[j] += fabsf(input[j * 10 + k].i());
 
     // finding the minimum in filtered data gives position of null symbol
     float minVal = 9999999;
