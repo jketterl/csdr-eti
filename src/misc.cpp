@@ -233,13 +233,12 @@ int init_eti(uint8_t* eti,struct ens_info_t *info)
     return i;
 }
 
-static uint8_t cif_time_deinterleaved[3072*18];
-static uint8_t dpbuf[3072*4*18];
-
 void create_eti(struct dab_state_t* dab)
 {
     uint8_t *fibs = dab->cifs_fibs[0];
     struct ens_info_t *info = &dab->ens_info;
+    uint8_t cif_time_deinterleaved[3072*18];
+    uint8_t dpbuf[3072*4*18];
 
 /* Constraint length */
 #define N 4
