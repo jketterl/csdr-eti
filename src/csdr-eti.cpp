@@ -23,6 +23,8 @@ using namespace Csdr::Eti;
 EtiDecoder::EtiDecoder() {
     dab = init_dab_state();
     dab->eti_callback = [this](uint8_t* eti) {
+        // writer cannot accept data. discard...
+        if (this->writer->writeable() < 6144) return;
         std::memcpy(this->writer->getWritePointer(), eti, 6144);
         this->writer->advance(6144);
     };
