@@ -35,6 +35,7 @@ EtiDecoder::EtiDecoder() {
 
 EtiDecoder::~EtiDecoder() {
     delete metawriter;
+    delete dab;
     fftwf_destroy_plan(forward_plan);
     fftwf_destroy_plan(backward_plan);
     fftwf_destroy_plan(coarse_plan);
