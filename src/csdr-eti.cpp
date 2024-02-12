@@ -46,6 +46,10 @@ void EtiDecoder::setMetaWriter(MetaWriter *writer) {
     delete old;
 }
 
+void EtiDecoder::setServiceFilter(std::set<uint32_t> services) {
+    dab->service_id_filter = std::move(services);
+}
+
 void EtiDecoder::sendMetaData(std::map<std::string, datatype> data) {
     if (metawriter == nullptr) return;
     metawriter->sendMetaData(std::move(data));

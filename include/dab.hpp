@@ -98,7 +98,7 @@ struct dab_state_t {
     bool ens_info_shown;
     int okcount;
 
-    std::vector<uint32_t> service_id_filter = {};
+    std::set<uint32_t> service_id_filter = {};
 
     /* Callback function to process a decoded ETI frame */
     std::function<void(uint8_t* eti)> eti_callback;

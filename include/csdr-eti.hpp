@@ -20,6 +20,7 @@ namespace Csdr::Eti {
             bool canProcess() override;
             void process() override;
             void setMetaWriter(MetaWriter* writer);
+            void setServiceFilter(std::set<uint32_t> services);
         private:
             uint32_t coarse_timeshift = 0;
             int32_t fine_timeshift = 0;
