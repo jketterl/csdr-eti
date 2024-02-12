@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 
 #include "dab.hpp"
@@ -11,14 +10,8 @@ extern "C" {
 };
 
 struct dab_state_t* init_dab_state() {
-    int i;
+    struct dab_state_t* dab = new dab_state_t();
 
-    struct dab_state_t* dab = (struct dab_state_t*) calloc(sizeof(struct dab_state_t),1);
-
-    for (i = 0; i < 64; i++) {
-        dab->ens_info.subchans[i].id = -1;
-        dab->ens_info.subchans[i].ASCTy = -1;
-    }
     dab->ens_info.CIFCount_hi = 0xff;
     dab->ens_info.CIFCount_lo = 0xff;
 

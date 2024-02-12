@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <vector>
+#include <map>
 
 /* A demapped transmission frame represents a transmission frame in
    the final state before the FIC-specific and MSC-specific decoding
@@ -31,7 +32,6 @@ struct demapped_transmission_frame_t {
 };
 
 struct subchannel_info_t {
-    int id;  /* Or -1 if not active */
     int eepprot;
     int slForm;
     int uep_index;
@@ -39,7 +39,6 @@ struct subchannel_info_t {
     int size;
     int bitrate;
     int protlev;
-    int ASCTy;
 };
 
 struct programme_label_t {
@@ -68,7 +67,7 @@ struct tf_info_t {
        sub-channels in the ensemble, so we need to merge the data from
        multiple transmission frames.
     */
-    struct subchannel_info_t subchans[64];
+    std::map<int, struct subchannel_info_t> subchans;
     struct ensemble_label_t ensembleLabel;
     std::vector<struct programme_label_t> programmes;
 };
@@ -77,7 +76,7 @@ struct ens_info_t {
     uint16_t EId;           /* Ensemble ID */
     uint8_t CIFCount_hi;    /* Our own CIF Count */
     uint8_t CIFCount_lo;
-    struct subchannel_info_t subchans[64];
+    std::map<int, struct subchannel_info_t> subchans;
 };
 
 struct dab_state_t

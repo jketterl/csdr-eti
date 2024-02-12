@@ -32,11 +32,9 @@ void dump_tf_info(struct tf_info_t* info)
 
     fprintf(stderr,"EId=0x%04x, CIFCount = %d %d\n",info->EId,info->CIFCount_hi,info->CIFCount_lo);
 
-    for (i=0;i<64;i++) {
-        struct subchannel_info_t *sc = &info->subchans[i];
-        if (sc->id >= 0) {
-            fprintf(stderr,"SubChId=%d, slForm=%d, StartAddress=%d, size=%d, bitrate=%d, ASCTy=0x%02x\n",sc->id,sc->slForm,sc->start_cu,sc->size,sc->bitrate,sc->ASCTy);
-        }
+    for (auto& chan: info->subchans) {
+        struct subchannel_info_t sc = chan.second;
+        fprintf(stderr, "SubChId=%d, slForm=%d, StartAddress=%d, size=%d, bitrate=%d\n", chan.first, sc.slForm, sc.start_cu, sc.size, sc.bitrate);
     }
 }
 
@@ -69,24 +67,23 @@ void fib_parse(struct tf_info_t* info, uint8_t* fib)
                 j = i + 1;
                 while (j < i + len) {
                     int id = (fib[j] & 0xfc) >> 2;
-                    struct subchannel_info_t *sc = &info->subchans[id];
+                    struct subchannel_info_t& sc = info->subchans[id];
 
-                    sc->id = id;
-                    sc->start_cu =  ((fib[j] & 0x03) << 8) | fib[j+1];
-                    sc->slForm = (fib[j+2] & 0x80) >> 7;
-                    sc->eepprot = sc->slForm;
-                    if (sc->slForm == 0) {
-                        sc->uep_index = fib[j+2] & 0x3f;
-                        sc->size = ueptable[sc->uep_index].subchsz;
-                        sc->bitrate = ueptable[sc->uep_index].bitrate;
-                        sc->protlev = ueptable[sc->uep_index].protlvl;
+                    sc.start_cu =  ((fib[j] & 0x03) << 8) | fib[j+1];
+                    sc.slForm = (fib[j+2] & 0x80) >> 7;
+                    sc.eepprot = sc.slForm;
+                    if (sc.slForm == 0) {
+                        sc.uep_index = fib[j+2] & 0x3f;
+                        sc.size = ueptable[sc.uep_index].subchsz;
+                        sc.bitrate = ueptable[sc.uep_index].bitrate;
+                        sc.protlev = ueptable[sc.uep_index].protlvl;
                         j += 3;
                     } else {
                         int Option = (fib[j+2] & 0x70) >> 4;
-                        sc->protlev = (fib[j+2] & 0x0c) >> 2;
-                        sc->protlev |= Option << 2;
-                        sc->size = ((fib[j+2] & 0x03) << 8) | fib[j+3];
-                        sc->bitrate = (sc->size / eeptable[sc->protlev].sizemul) * eeptable[sc->protlev].ratemul;
+                        sc.protlev = (fib[j+2] & 0x0c) >> 2;
+                        sc.protlev |= Option << 2;
+                        sc.size = ((fib[j+2] & 0x03) << 8) | fib[j+3];
+                        sc.bitrate = (sc.size / eeptable[sc.protlev].sizemul) * eeptable[sc.protlev].ratemul;
                         j += 4;
                     }
                 }
@@ -107,7 +104,6 @@ void fib_parse(struct tf_info_t* info, uint8_t* fib)
                         int TMid = (fib[j] & 0xc0) >> 6;
                         if (TMid == 0) {
                             int id = (fib[j+1]&0xfc) >> 2;
-                            info->subchans[id].ASCTy = fib[j] & 0x3f;
                             //fprintf(stderr,"Subchannel %d, ASCTy=0x%02x\n",id,info->subchans[id].ASCTy);
                         } else if (TMid == 1) {
                             int id = (fib[j+1]&0xfc) >> 2;
@@ -194,8 +190,6 @@ struct tf_info_t fib_decode(struct tf_fibs_t *fibs, int nfibs) {
         .CIFCount_hi = 0,
         .CIFCount_lo = 0,
     };
-
-    std::fill(info.subchans, info.subchans + 64, (struct subchannel_info_t) {.id = -1, .ASCTy = -1});
 
     /* Parse nfibs FIBs */
     for (i = 0; i < nfibs; i++) {
