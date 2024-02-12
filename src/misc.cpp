@@ -10,8 +10,11 @@ extern "C" {
 
 void merge_info(struct ens_info_t* ei, struct tf_info_t *info)
 {
-    for (auto& chan: info->subchans) {
-        ei->subchans[chan.first] = chan.second;
+    for (auto& it: info->subchans) {
+        ei->subchans[it.first] = it.second;
+    }
+    for (auto& it: info->services) {
+        ei->services[it.first] = it.second;
     }
     ei->EId = info->EId;
     if (ei->CIFCount_hi == 0xff) {
@@ -146,8 +149,7 @@ static uint16_t const crctab_1021[256] = {
         0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
 };
 
-static uint16_t calc_crc(unsigned char *data, int length, uint16_t const *crctab, unsigned int crc)
-{
+static uint16_t calc_crc(unsigned char *data, int length, uint16_t const *crctab, unsigned int crc) {
     int count;
     unsigned int temp;
 
@@ -160,16 +162,14 @@ static uint16_t calc_crc(unsigned char *data, int length, uint16_t const *crctab
     return crc & 0xffff;
 }
 
-int check_fib_crc(uint8_t* data)
-{
+int check_fib_crc(uint8_t* data) {
 #define CRC_GOOD    0x1d0f
     uint16_t crc = calc_crc(data,32,crctab_1021,0xffff);
     return (crc == CRC_GOOD);
 }
 
 
-int init_eti(uint8_t* eti,struct ens_info_t *info)
-{
+int init_eti(uint8_t* eti, struct ens_info_t *info, std::map<int, struct subchannel_info_t>& subchans) {
     int i = 0;
     int j;
 
@@ -190,10 +190,10 @@ int init_eti(uint8_t* eti,struct ens_info_t *info)
     //   FC()
     eti[i++] = info->CIFCount_lo; // FCT
     int FICF = 1;  // FIC present in MST
-    int NST = info->subchans.size();
+    int NST = subchans.size();
     int FL = 0;
-    for (auto chan: info->subchans) {
-        FL += (chan.second.bitrate * 3) / 4;
+    for (auto& it: subchans) {
+        FL += (it.second.bitrate * 3) / 4;
     }
     FL += NST + 1 + 24; // STC + EOH + MST (FIC data, Mode 1!)
     eti[i++] = (FICF << 7) | NST;
@@ -202,16 +202,16 @@ int init_eti(uint8_t* eti,struct ens_info_t *info)
     eti[i++] = (FP << 5) | (MID << 3) | ((FL & 0x700) >> 8);
     eti[i++] = FL & 0xff;
     //   STC()
-    for (auto chan: info->subchans) {
-        int SCID = chan.first;
-        int SAD = chan.second.start_cu;
+    for (auto& it: subchans) {
+        int SCID = it.first;
+        int SAD = it.second.start_cu;
         int TPL;
-        if (chan.second.slForm == 0) {
-            TPL = 0x10 | (chan.second.protlev-1);
+        if (it.second.slForm == 0) {
+            TPL = 0x10 | (it.second.protlev-1);
         } else {
-            TPL = 0x20 | chan.second.protlev;
+            TPL = 0x20 | it.second.protlev;
         }
-        int STL = (chan.second.bitrate * 3) / 8;
+        int STL = (it.second.bitrate * 3) / 8;
         eti[i++] = (SCID << 2) | ((SAD & 0x300) >> 8);
         eti[i++] = SAD & 0xff;
         eti[i++] = (TPL << 2) | ((STL & 0x300) >> 8);
@@ -230,8 +230,7 @@ int init_eti(uint8_t* eti,struct ens_info_t *info)
     return i;
 }
 
-void create_eti(struct dab_state_t* dab)
-{
+void create_eti(struct dab_state_t* dab) {
     uint8_t *fibs = dab->cifs_fibs[0];
     struct ens_info_t *info = &dab->ens_info;
     uint8_t cif_time_deinterleaved[3072*18];
@@ -248,8 +247,28 @@ void create_eti(struct dab_state_t* dab)
     int i;
     uint8_t eti[6144];
 
+    // if filtered, collect all the subchannels we are interested in
+    std::set<int> channel_filter;
+    for (auto& it: dab->service_id_filter) {
+        if (dab->ens_info.services.count(it)) {
+            auto& subchans = dab->ens_info.services[it].subchannels;
+            channel_filter.insert(subchans.begin(), subchans.end());
+        }
+    }
+
+    std::map<int, struct subchannel_info_t> subchans;
+    if (channel_filter.empty()) {
+        subchans = info->subchans;
+    } else {
+        for (auto it: info->subchans) {
+            if (channel_filter.count(it.first)) {
+                subchans[it.first] = it.second;
+            }
+        }
+    }
+
     /* Create our ETI frame, including FIB data */
-    int e1 = init_eti(eti,info);
+    int e1 = init_eti(eti,info, subchans);
 
     /* Add FIBs */
     memcpy(eti+e1, fibs, 96);
@@ -259,8 +278,8 @@ void create_eti(struct dab_state_t* dab)
     time_deinterleave(cif_time_deinterleaved, dab->cifs_msc);
 
     /* Now go through each subchannel, outputting the MSC data to our ETI frame */
-    for (auto chan: info->subchans) {
-        struct subchannel_info_t sc = chan.second;
+    for (auto it: subchans) {
+        struct subchannel_info_t sc = it.second;
 
         //  fprintf(stderr,"Decoding subchannel %d\n",sc->id);
         /* Apply appropriate depuncture for each subchannel */

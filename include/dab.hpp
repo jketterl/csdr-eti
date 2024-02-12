@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <vector>
+#include <set>
 #include <map>
 
 /* A demapped transmission frame represents a transmission frame in
@@ -41,6 +42,10 @@ struct subchannel_info_t {
     int protlev;
 };
 
+struct service_info_t {
+    std::set<int> subchannels;
+};
+
 struct programme_label_t {
     uint8_t charset;
     uint16_t service_id;
@@ -68,6 +73,7 @@ struct tf_info_t {
        multiple transmission frames.
     */
     std::map<int, struct subchannel_info_t> subchans;
+    std::map<uint32_t, struct service_info_t> services;
     struct ensemble_label_t ensembleLabel;
     std::vector<struct programme_label_t> programmes;
 };
@@ -77,10 +83,10 @@ struct ens_info_t {
     uint8_t CIFCount_hi;    /* Our own CIF Count */
     uint8_t CIFCount_lo;
     std::map<int, struct subchannel_info_t> subchans;
+    std::map<uint32_t, struct service_info_t> services;
 };
 
-struct dab_state_t
-{
+struct dab_state_t {
     struct demapped_transmission_frame_t tfs[5]; /* We need buffers for 5 tranmission frames - the four previous, plus the new */
     struct ens_info_t ens_info;
 
@@ -91,6 +97,8 @@ struct dab_state_t
     bool locked;
     bool ens_info_shown;
     int okcount;
+
+    std::vector<uint32_t> service_id_filter = {};
 
     /* Callback function to process a decoded ETI frame */
     std::function<void(uint8_t* eti)> eti_callback;

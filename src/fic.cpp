@@ -90,7 +90,7 @@ void fib_parse(struct tf_info_t* info, uint8_t* fib)
             } else if (ext == 2) { // FIG 0/2
                 j = i + 1;
                 while (j < i + len) {
-                    int sid;
+                    uint32_t sid;
                     if (PD == 0) { // Audio stream
                         sid = (fib[j] << 8) | fib[j+1];
                         j += 2;
@@ -98,12 +98,14 @@ void fib_parse(struct tf_info_t* info, uint8_t* fib)
                         sid = (fib[j] << 24) | (fib[j+1] << 16) | (fib[j+2] << 8) | fib[j+3];
                         j += 4;
                     }
+                    auto& service = info->services[sid];
                     int n = fib[j++] & 0x0f;
                     //fprintf(stderr,"service %d, ncomponents=%d\n",sid,n);
                     for (k=0;k<n;k++) {
                         int TMid = (fib[j] & 0xc0) >> 6;
                         if (TMid == 0) {
                             int id = (fib[j+1]&0xfc) >> 2;
+                            service.subchannels.insert(id);
                             //fprintf(stderr,"Subchannel %d, ASCTy=0x%02x\n",id,info->subchans[id].ASCTy);
                         } else if (TMid == 1) {
                             int id = (fib[j+1]&0xfc) >> 2;
@@ -113,6 +115,7 @@ void fib_parse(struct tf_info_t* info, uint8_t* fib)
                             fprintf(stderr,"Unhandled TMid %d for subchannel %d\n",TMid,id);
                         } else if (TMid == 3) {
                             int id = (fib[j+1] << 4) | (fib[j+2]&0xf0) >> 4;
+                            service.subchannels.insert(id);
                             //fprintf(stderr,"Unhandled TMid %d for subchannel %d\n",TMid,id);
                         }
                         j += 2;
