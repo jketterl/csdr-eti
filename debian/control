@@ -16,5 +16,5 @@ Description: DAB ETI decoder as a csdr module
 
 Package: libcsdr-eti-dev
 Architecture: any
-Depends: libcsdr-eti0 (=${binary:Version}), libfftw3-dev (>= 3.3), libcsdr-dev(>= 0.19), ${misc:Depends}
-Description: development debendencis for libcsdr-eti
+Depends: libcsdr-eti0 (=${binary:Version}), libfftw3-dev (>= 3.3), libcsdr-dev (>= 0.19), ${misc:Depends}
+Description: development dependencies for libcsdr-eti
