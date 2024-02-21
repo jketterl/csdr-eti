@@ -123,7 +123,7 @@ bool EtiDecoder::sdr_demod(Csdr::complex<float>* input, struct demapped_transmis
     fftwf_complex* symbols_d = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * 2048 * 76);
 
     for (int j = 1; j < 76; j++) {
-        for (int i = 0; i < 2048; i++) {
+        for (int i = 256; i < 1793; i++) {
             symbols_d[j * 2048 + i][0] =
                     ((symbols[j][i][0] * symbols[j-1][i][0])
                     +(symbols[j][i][1] * symbols[j-1][i][1]))
