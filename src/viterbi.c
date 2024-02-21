@@ -48,7 +48,7 @@ unsigned int Poly615[] = { 042631, 047245, 073363, 056507, 077267, 064537 }; /* 
 #define NULL ((void *)0)
 
 /* There ought to be a more general way to do this efficiently ... */
-#if defined(__alpha__) || defined(__x86_64__)
+#if defined(__alpha__) || defined(__x86_64__) || defined(__aarch64__)
 #define LONGBITS 64
 #define LOGLONGBITS 6
 #else
